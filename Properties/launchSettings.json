@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "GPR202_Assessment_1": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "GALLIUM_DRIVER": "d3d12",
+        "XDG_SESSION_TYPE": "x11",
+        "EGL_LOG_LEVEL": "fatal"
+      }
+    }
+  }
+}
