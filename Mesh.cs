@@ -10,7 +10,7 @@ public class Mesh
     public Mesh(float[] _vertexData)
     {
         vertexData = _vertexData;
-        stride = 3 * sizeof(float);
+        stride = 6 * sizeof(float);
     }
 
     public void BuildMesh()
@@ -30,8 +30,8 @@ public class Mesh
         GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, stride, 0);
         GL.EnableVertexAttribArray(0);
 
-        // GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, stride, 3 * sizeof(float));
-        // GL.EnableVertexAttribArray(1);
+        GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, stride, 3 * sizeof(float));
+        GL.EnableVertexAttribArray(1);
 
         GL.BindVertexArray(0);
     }
@@ -39,7 +39,7 @@ public class Mesh
     public void DrawMesh()
     {
         GL.BindVertexArray(_vao);
-        GL.DrawArrays(PrimitiveType.Triangles, 0, vertexData.Length / 3);
+        GL.DrawArrays(PrimitiveType.Triangles, 0, vertexData.Length / 6);
         GL.BindVertexArray(0);
     }
 
@@ -47,7 +47,7 @@ public class Mesh
     {
         GL.BindVertexArray(0);
         GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
-        GL.DeleteBuffer(_vao);
+        GL.DeleteVertexArray(_vao);
         GL.DeleteBuffer(_vbo);
     }
 }

@@ -1,4 +1,5 @@
 using OpenTK.Graphics.OpenGL4;
+using OpenTK.Mathematics;
 
 public class ShaderPipeline
 {
@@ -73,6 +74,12 @@ public class ShaderPipeline
             GL.DetachShader(newInstance, shader);
             GL.DeleteShader(shader);
         }
+    }
+
+    public void SetMatrix4(string name, Matrix4 matrix)
+    {
+        GL.GetUniformLocation(shaderInstance, name);
+        GL.UniformMatrix4(location, true, ref matrix);
     }
 
     public void UseShader()
