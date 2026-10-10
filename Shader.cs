@@ -78,7 +78,7 @@ public class ShaderPipeline
 
     public void SetMatrix4(string name, Matrix4 matrix)
     {
-        GL.GetUniformLocation(shaderInstance, name);
+        int location = GL.GetUniformLocation(shaderInstance, name);
         GL.UniformMatrix4(location, true, ref matrix);
     }
 
