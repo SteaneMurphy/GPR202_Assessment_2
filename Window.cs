@@ -16,6 +16,10 @@ public class MainWindow : GameWindow
         windowTitle: name of the window
     */
 
+    string vertShaderPath = "shaders/shader.vert";
+    string fragShaderPath = "shaders/shader.frag";
+    ShaderPipeline shaderInstance;
+
     public MainWindow(int width, int height, string windowTitle) :
     base(GameWindowSettings.Default, new NativeWindowSettings()
     {
@@ -31,12 +35,21 @@ public class MainWindow : GameWindow
         base.OnLoad();
         Vector4 screenColour = new Vector4(.1f, .1f, .1f, 1f);
         GL.ClearColor(screenColour.X, screenColour.Y, screenColour.Z, screenColour.W);
+
+        shaderInstance = new ShaderPipeline(vertShaderPath, fragShaderPath);
+        shaderInstance.BuildShaders();
     }
 
-    // protected override void OnRenderFrame(FrameEventArgs args)
-    // {
-    //     base.OnRenderFrame(args);
-    // }
+    protected override void OnRenderFrame(FrameEventArgs args)
+    {
+        base.OnRenderFrame(args);
+
+        GL.Clear(ClearBufferMask.ColorBufferBit);
+
+        shaderInstance.UseShader();
+
+        SwapBuffers();
+    }
 
     // protected override void OnUpdateFrame(FrameEventArgs args)
     // {
@@ -48,8 +61,10 @@ public class MainWindow : GameWindow
     //     base.OnResize(e);
     // }
 
-    // protected override void OnUnload()
-    // {
-    //     base.OnUnload();
-    // }
+    protected override void OnUnload()
+    {
+        base.OnUnload();
+
+        shaderInstance.DeleteShader();
+    }
 }
