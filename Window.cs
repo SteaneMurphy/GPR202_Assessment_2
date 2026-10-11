@@ -6,20 +6,22 @@ using OpenTK.Windowing.GraphicsLibraryFramework;
 
 namespace OpenGLWindow;
 
+/*
+    The main window. Inherits from OpenTK's GameWindow, which runs the loop:
+    OnUpdateFrame handles input and animation, OnRenderFrame draws the frame.
+
+    Controls: left mouse drag to orbit, scroll to zoom,
+    D depth test, W wireframe, F face culling, R ripple shader, T texture.
+*/
 public class MainWindow : GameWindow
 {
-    /*
-        Main window setup. Create new extended GameWindow class.
-
-        Args:
-
-        width, height: dimensions of the window
-        windowTitle: name of the window
-    */
+    // file paths
     string vertShaderPath = "shaders/shader.vert";
     string rippleShaderPath = "shaders/ripple.vert";
     string fragShaderPath = "shaders/shader.frag";
     string texturePath = "textures/water.png";
+
+    // classes & objects
     ShaderPipeline _standard = null!;
     ShaderPipeline _ripple = null!;
     ShaderPipeline _current = null!;
@@ -33,6 +35,7 @@ public class MainWindow : GameWindow
     Time time = new Time();
     Camera camera = null!;
 
+    // adjustable values - to be exposed to a GUI later
     float scalePulse;
     float scaleBase;
     float scaleSpeed;
@@ -44,6 +47,7 @@ public class MainWindow : GameWindow
     float amplitudeSpeedX;
     float amplitudeZ;
     float amplitudeSpeedZ;
+
     // toggles
     bool depthTest = true;
     bool wireframe = false;
@@ -52,6 +56,14 @@ public class MainWindow : GameWindow
     bool rippleShader = false;
     bool textureOn = false;
 
+    /*
+        Main window setup. Create new extended GameWindow class.
+
+        Args:
+
+        width, height: dimensions of the window
+        windowTitle: name of the window
+    */
     public MainWindow(int width, int height, string windowTitle) :
     base(GameWindowSettings.Default, new NativeWindowSettings()
     {
@@ -62,6 +74,10 @@ public class MainWindow : GameWindow
         
     }
 
+    /*
+        Runs once when the window opens. Sets the animation values, creates the
+        camera, texture, both shader programs and the object mesh.
+    */
     protected override void OnLoad()
     {
         base.OnLoad();
@@ -91,6 +107,9 @@ public class MainWindow : GameWindow
         Vector4 screenColour = new Vector4(.1f, .1f, .1f, 1f);
         GL.ClearColor(screenColour.X, screenColour.Y, screenColour.Z, screenColour.W);
 
+        /*
+            Builds all shaders and sets the _standard as default
+        */
         _standard = new ShaderPipeline(vertShaderPath, fragShaderPath);
         _standard.BuildShaders();
         _ripple = new ShaderPipeline(rippleShaderPath, fragShaderPath);
@@ -103,11 +122,12 @@ public class MainWindow : GameWindow
 
         mesh = new Mesh(vertexData, indexData);
         mesh.BuildMesh();
-
-        // torus indices wind clockwise when viewed from outside
-        GL.FrontFace(FrontFaceDirection.Cw);
     }
 
+    /*
+        Draws one frame. Applies the toggled GL states, clears the screen, picks the
+        active shader, sends the uniforms, binds the texture and draws the object.
+    */
     protected override void OnRenderFrame(FrameEventArgs args)
     {
         base.OnRenderFrame(args);
@@ -131,8 +151,9 @@ public class MainWindow : GameWindow
 
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-        _current.UseShader();
+        _current.UseShader();                                            // uniforms below go to whichever program is active
 
+        // scale, then rotate, then translate. Rotation before translation or else the translated movement also gets rotated
         Matrix4 model = scale * rotation * translation;
         Matrix4 mvp = model * view * projection;
 
@@ -150,14 +171,13 @@ public class MainWindow : GameWindow
         SwapBuffers();
     }
 
+    /*
+        Runs every frame before drawing. Reads mouse and keyboard input, updates the
+        camera, and builds the scale, rotation and translation matrices from time.
+    */
     protected override void OnUpdateFrame(FrameEventArgs args)
     {
         base.OnUpdateFrame(args);
-
-        /*
-            Rotation before translation or else the translated movement also gets rotated
-        */
-
 
         // input
         if(MouseState.IsButtonDown(MouseButton.Left))
@@ -177,6 +197,7 @@ public class MainWindow : GameWindow
             wireframe = !wireframe;
         }
 
+        // F cycles: off -> cull front -> cull back -> off
         if(KeyboardState.IsKeyPressed(Keys.F))
         {
             if(!faceCullFront && !faceCullBack)
@@ -209,7 +230,7 @@ public class MainWindow : GameWindow
         // view
         view = camera.CalculateViewMatrix();
 
-        // scale calcs
+        // scale calc
         double scaleCalc = scaleBase + scalePulse * MathHelper.Sin(time.TotalTime() * scaleSpeed);
 
         // rotation calcs
@@ -233,6 +254,10 @@ public class MainWindow : GameWindow
         translation = Matrix4.CreateTranslation(0f, (float)translationCalc, 0f);
     }
 
+    /*
+        Runs when the window is resized. Updates the viewport and rebuilds the
+        projection matrix so the aspect ratio stays correct.
+    */
     protected override void OnResize(ResizeEventArgs e)
     {
         base.OnResize(e);
@@ -242,6 +267,9 @@ public class MainWindow : GameWindow
         projection = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(70f), ClientSize.X / (float)ClientSize.Y, 0.1f, 100f);
     }
 
+    /*
+        Runs when the window closes. Frees everything created on the GPU.
+    */
     protected override void OnUnload()
     {
         base.OnUnload();
@@ -252,3 +280,37 @@ public class MainWindow : GameWindow
         mesh.Cleanup();
     }
 }
+
+/*
+    References
+
+    de Vries, J. (n.d.-a). Coordinate systems. LearnOpenGL.
+        https://learnopengl.com/Getting-started/Coordinate-Systems
+
+    de Vries, J. (n.d.-b). Depth testing. LearnOpenGL.
+        https://learnopengl.com/Advanced-OpenGL/Depth-testing
+
+    de Vries, J. (n.d.-c). Face culling. LearnOpenGL.
+        https://learnopengl.com/Advanced-OpenGL/Face-culling
+
+    de Vries, J. (n.d.-d). Transformations. LearnOpenGL.
+        https://learnopengl.com/Getting-started/Transformations
+
+    Khronos Group. (n.d.-a). glClear [OpenGL 4 reference page].
+        https://registry.khronos.org/OpenGL-Refpages/gl4/html/glClear.xhtml
+
+    Khronos Group. (n.d.-b). glClearColor [OpenGL 4 reference page].
+        https://registry.khronos.org/OpenGL-Refpages/gl4/html/glClearColor.xhtml
+
+    Khronos Group. (n.d.-c). glCullFace [OpenGL 4 reference page].
+        https://registry.khronos.org/OpenGL-Refpages/gl4/html/glCullFace.xhtml
+
+    Khronos Group. (n.d.-d). glEnable [OpenGL 4 reference page].
+        https://registry.khronos.org/OpenGL-Refpages/gl4/html/glEnable.xhtml
+
+    Khronos Group. (n.d.-e). glPolygonMode [OpenGL 4 reference page].
+        https://registry.khronos.org/OpenGL-Refpages/gl4/html/glPolygonMode.xhtml
+
+    Khronos Group. (n.d.-f). glViewport [OpenGL 4 reference page].
+        https://registry.khronos.org/OpenGL-Refpages/gl4/html/glViewport.xhtml
+*/

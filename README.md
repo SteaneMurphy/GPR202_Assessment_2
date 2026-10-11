@@ -24,6 +24,10 @@ To build from source you need the .NET 8 SDK. Run `dotnet run` from the project 
 
 Some toggles are worth trying together. Turning off the depth test (D) makes the back of the torus draw over the front. Culling back faces (F twice) fixes most of that, even with the depth test still off. Because a torus isn't convex, though, some overlap is still visible where the far side of the ring shows through the hole, so culling alone can't replace the depth test. Culling front faces shows the inside of the tube.
 
+## Known issues
+
+With the texture on (T), there's a visible seam on the torus where the UVs wrap from 1 back to 0. I do not have the knowledge to fix this issue yet.
+
 ## Files
 
 - `Program.cs` creates and runs the window.
@@ -40,11 +44,8 @@ Some toggles are worth trying together. Turning off the depth test (D) makes the
 
 ## References
 
-<!-- TODO: check the release years on nuget.org -->
+AITextured. (2025, December 10). *Water PBR texture with shimmering blue and reflective gold liquid surface* [Image]. https://aitextured.com/textures/water/water-seamless-pbr-shimmering-liquid-metal-water-texture.html
 
-OpenTK. (2024). *OpenTK* (Version 4.9.4) [Computer software]. https://opentk.net/
+OpenTK. (2025). *OpenTK* (Version 4.9.4) [Computer software]. https://opentk.net/
 
-StbImageSharp. (2024). *StbImageSharp* (Version 2.30.16) [Computer software]. https://github.com/StbSharp/StbImageSharp
-
-<!-- TODO: fill in the texture source -->
-Author/Site. (Year). *Title of the water texture* [Image]. Site name. URL
+StbSharp. (2026). *StbImageSharp* (Version 2.30.16) [Computer software]. https://github.com/StbSharp/StbImageSharp
