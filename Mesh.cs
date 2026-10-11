@@ -13,7 +13,7 @@ public class Mesh
     {
         vertexData = _vertexData;
         indexArray = _indexArray;
-        stride = 6 * sizeof(float);
+        stride = 8 * sizeof(float);
     }
 
     public void BuildMesh()
@@ -35,6 +35,9 @@ public class Mesh
 
         GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, stride, 3 * sizeof(float));
         GL.EnableVertexAttribArray(1);
+
+        GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, stride, 6 * sizeof(float));
+        GL.EnableVertexAttribArray(2);
 
         _ebo = GL.GenBuffer();
         GL.BindBuffer(BufferTarget.ElementArrayBuffer, _ebo);

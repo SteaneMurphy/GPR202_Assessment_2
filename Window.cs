@@ -19,9 +19,11 @@ public class MainWindow : GameWindow
     string vertShaderPath = "shaders/shader.vert";
     string rippleShaderPath = "shaders/ripple.vert";
     string fragShaderPath = "shaders/shader.frag";
+    string texturePath = "textures/water.png";
     ShaderPipeline _standard = null!;
     ShaderPipeline _ripple = null!;
     ShaderPipeline _current = null!;
+    Texture texture = null!;
     Mesh mesh = null!;
     Matrix4 scale;
     Matrix4 translation;
@@ -48,6 +50,7 @@ public class MainWindow : GameWindow
     bool faceCullFront = false;
     bool faceCullBack = false;
     bool rippleShader = false;
+    bool textureOn = false;
 
     public MainWindow(int width, int height, string windowTitle) :
     base(GameWindowSettings.Default, new NativeWindowSettings()
@@ -62,6 +65,9 @@ public class MainWindow : GameWindow
     protected override void OnLoad()
     {
         base.OnLoad();
+        // texture
+        texture = new Texture(texturePath);
+
         // view
         camera = new Camera(4f, 34f, 22f, 0.2f, 0.5f, 1.5f, 10f);
 
@@ -136,6 +142,9 @@ public class MainWindow : GameWindow
         }
         _current.SetMatrix4("mvp", mvp);
 
+        _current.SetFloat("textureMix", textureOn ? 1f : 0f);
+        texture.UseTexture();
+
         mesh.DrawMesh();
 
         SwapBuffers();
@@ -192,6 +201,11 @@ public class MainWindow : GameWindow
             _current = rippleShader ? _ripple : _standard;
         }
 
+        if(KeyboardState.IsKeyPressed(Keys.T))
+        {
+            textureOn = !textureOn;
+        }
+
         // view
         view = camera.CalculateViewMatrix();
 
@@ -232,7 +246,9 @@ public class MainWindow : GameWindow
     {
         base.OnUnload();
 
-        _current.DeleteShader();
+        _standard.DeleteShader();
+        _ripple.DeleteShader();
+        texture.Cleanup();
         mesh.Cleanup();
     }
 }

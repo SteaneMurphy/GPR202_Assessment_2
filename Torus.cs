@@ -31,6 +31,9 @@ public class Torus
                 vertices.Add(MathF.Cos(minorAngle) * MathF.Cos(majorAngle) * 0.5f + 0.5f);
                 vertices.Add(MathF.Sin(minorAngle) * 0.5f + 0.5f);
                 vertices.Add(MathF.Cos(minorAngle) * MathF.Sin(majorAngle) * 0.5f + 0.5f);
+
+                vertices.Add((float)i / ringSegments);
+                vertices.Add((float)j / tubeSegments);
             }
         }
 
