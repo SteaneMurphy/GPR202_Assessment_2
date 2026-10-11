@@ -11,4 +11,8 @@
     <PackageReference Include="OpenTK" Version="4.9.4" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="shaders\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

@@ -22,6 +22,13 @@ public class MainWindow : GameWindow
     Matrix4 model;
     Matrix4 view;
     Matrix4 projection;
+    Time time;
+    float rotationSpeed;
+    float rotationAngle;
+    float amplitudeX;
+    float amplitudeSpeedX;
+    float amplitudeZ;
+    float amplitudeSpeedZ;
 
     public MainWindow(int width, int height, string windowTitle) :
     base(GameWindowSettings.Default, new NativeWindowSettings()
@@ -35,7 +42,17 @@ public class MainWindow : GameWindow
 
     protected override void OnLoad()
     {
+        // variables for user
+        rotationSpeed = 5f;
+        rotationAngle = 10f;
+        amplitudeX = 45f;
+        amplitudeSpeedX = 1f;
+        amplitudeZ = 70f;
+        amplitudeSpeedZ = 2f;
+
         base.OnLoad();
+
+        time = new Time();
 
         Vector4 screenColour = new Vector4(.1f, .1f, .1f, 1f);
         GL.ClearColor(screenColour.X, screenColour.Y, screenColour.Z, screenColour.W);
@@ -45,7 +62,11 @@ public class MainWindow : GameWindow
 
         GL.Enable(EnableCap.DepthTest);
 
-        mesh = new Mesh(Geometry.cube);
+        Torus torus = new Torus(100, 50, 0.7f, 0.3f);
+        float[] vertexData = torus.CreateTorus();
+        uint[] indexData = torus.CreateIndex();
+
+        mesh = new Mesh(vertexData, indexData);
         mesh.BuildMesh();
 
         view = Matrix4.LookAt(new Vector3(2f, 1.5f, 3f), Vector3.Zero, Vector3.UnitY);
@@ -59,8 +80,15 @@ public class MainWindow : GameWindow
 
         _shader.UseShader();
 
-        model = Matrix4.Identity;
+        double angleX = amplitudeX * MathHelper.Sin(time.TotalTime() * amplitudeSpeedX);
+        double angleZ = amplitudeZ * MathHelper.Sin(time.TotalTime() * amplitudeSpeedZ);
+
+        model = Matrix4.CreateRotationY(MathHelper.DegreesToRadians(rotationAngle * rotationSpeed * (float)time.TotalTime())) *
+                Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(angleX)) *
+                Matrix4.CreateRotationZ((float)MathHelper.DegreesToRadians(angleZ));
+
         Matrix4 mvp = model * view * projection;
+
         _shader.SetMatrix4("mvp", mvp);
 
         mesh.DrawMesh();
