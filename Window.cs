@@ -39,6 +39,11 @@ public class MainWindow : GameWindow
     float amplitudeSpeedX;
     float amplitudeZ;
     float amplitudeSpeedZ;
+    // toggles
+    bool depthTest = true;
+    bool wireframe = false;
+    bool faceCullFront = false;
+    bool faceCullBack = false;
 
     public MainWindow(int width, int height, string windowTitle) :
     base(GameWindowSettings.Default, new NativeWindowSettings()
@@ -79,19 +84,37 @@ public class MainWindow : GameWindow
         _shader = new ShaderPipeline(vertShaderPath, fragShaderPath);
         _shader.BuildShaders();
 
-        GL.Enable(EnableCap.DepthTest);
-
         Torus torus = new Torus(100, 50, 0.7f, 0.3f);
         float[] vertexData = torus.CreateTorus();
         uint[] indexData = torus.CreateIndex();
 
         mesh = new Mesh(vertexData, indexData);
         mesh.BuildMesh();
+
+        // torus indices wind clockwise when viewed from outside
+        GL.FrontFace(FrontFaceDirection.Cw);
     }
 
     protected override void OnRenderFrame(FrameEventArgs args)
     {
         base.OnRenderFrame(args);
+
+        if (depthTest) GL.Enable(EnableCap.DepthTest); else GL.Disable(EnableCap.DepthTest);
+        if (wireframe) GL.PolygonMode(TriangleFace.FrontAndBack, PolygonMode.Line); else GL.PolygonMode(TriangleFace.FrontAndBack, PolygonMode.Fill);
+        if (faceCullFront)
+        {
+            GL.Enable(EnableCap.CullFace);
+            GL.CullFace(TriangleFace.Front);
+        }
+        else if (faceCullBack)
+        {
+            GL.Enable(EnableCap.CullFace);
+            GL.CullFace(TriangleFace.Back);
+        }
+        else
+        {
+            GL.Disable(EnableCap.CullFace);
+        }
 
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
@@ -123,6 +146,34 @@ public class MainWindow : GameWindow
         }
 
         camera.ZoomCamera(MouseState.ScrollDelta.Y);
+
+        if(KeyboardState.IsKeyPressed(Keys.D))
+        {
+            depthTest = !depthTest;
+        }
+
+        if(KeyboardState.IsKeyPressed(Keys.W))
+        {
+            wireframe = !wireframe;
+        }
+
+        if(KeyboardState.IsKeyPressed(Keys.F))
+        {
+            if(!faceCullFront && !faceCullBack)
+            {
+                faceCullFront = true;
+            }
+            else if(faceCullFront)
+            {
+                faceCullFront = false;
+                faceCullBack = true;
+            }
+            else if(faceCullBack)
+            {
+                faceCullFront = false;
+                faceCullBack = false;
+            }
+        }
 
         // view
         view = camera.CalculateViewMatrix();
