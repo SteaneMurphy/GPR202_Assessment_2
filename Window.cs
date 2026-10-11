@@ -17,12 +17,20 @@ public class MainWindow : GameWindow
     */
     string vertShaderPath = "shaders/shader.vert";
     string fragShaderPath = "shaders/shader.frag";
-    ShaderPipeline _shader;
-    Mesh mesh;
-    Matrix4 model;
+    ShaderPipeline _shader = null!;
+    Mesh mesh = null!;
+    Matrix4 scale;
+    Matrix4 translation;
+    Matrix4 rotation;
     Matrix4 view;
     Matrix4 projection;
-    Time time;
+    Time time = new Time();
+
+    float scalePulse;
+    float scaleBase;
+    float scaleSpeed;
+    float translationAmt;
+    float translationSpeed;
     float rotationSpeed;
     float rotationAngle;
     float amplitudeX;
@@ -42,7 +50,16 @@ public class MainWindow : GameWindow
 
     protected override void OnLoad()
     {
-        // variables for user
+        // scale
+        scaleSpeed = 2f;
+        scaleBase = 1f;
+        scalePulse = 0.2f;
+
+        // translation
+        translationAmt = 1f;
+        translationSpeed = 1.5f;
+
+        // rotation
         rotationSpeed = 5f;
         rotationAngle = 10f;
         amplitudeX = 45f;
@@ -51,8 +68,6 @@ public class MainWindow : GameWindow
         amplitudeSpeedZ = 2f;
 
         base.OnLoad();
-
-        time = new Time();
 
         Vector4 screenColour = new Vector4(.1f, .1f, .1f, 1f);
         GL.ClearColor(screenColour.X, screenColour.Y, screenColour.Z, screenColour.W);
@@ -80,13 +95,7 @@ public class MainWindow : GameWindow
 
         _shader.UseShader();
 
-        double angleX = amplitudeX * MathHelper.Sin(time.TotalTime() * amplitudeSpeedX);
-        double angleZ = amplitudeZ * MathHelper.Sin(time.TotalTime() * amplitudeSpeedZ);
-
-        model = Matrix4.CreateRotationY(MathHelper.DegreesToRadians(rotationAngle * rotationSpeed * (float)time.TotalTime())) *
-                Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(angleX)) *
-                Matrix4.CreateRotationZ((float)MathHelper.DegreesToRadians(angleZ));
-
+        Matrix4 model = scale * rotation * translation;
         Matrix4 mvp = model * view * projection;
 
         _shader.SetMatrix4("mvp", mvp);
@@ -96,10 +105,36 @@ public class MainWindow : GameWindow
         SwapBuffers();
     }
 
-    // protected override void OnUpdateFrame(FrameEventArgs args)
-    // {
-    //     base.OnUpdateFrame(args);
-    // }
+    protected override void OnUpdateFrame(FrameEventArgs args)
+    {
+        base.OnUpdateFrame(args);
+
+        /*
+            Rotation before translation or else the translated movement also gets rotated
+        */
+        // scale calcs
+        double scaleCalc = scaleBase + scalePulse * MathHelper.Sin(time.TotalTime() * scaleSpeed);
+
+        // rotation calcs
+        double angleX = amplitudeX * MathHelper.Sin(time.TotalTime() * amplitudeSpeedX);
+        double angleZ = amplitudeZ * MathHelper.Sin(time.TotalTime() * amplitudeSpeedZ);
+
+        //translation calc
+        double translationCalc = translationAmt * MathHelper.Sin(time.TotalTime() * translationSpeed);
+
+        // scale
+        scale = Matrix4.CreateScale((float)scaleCalc);
+
+        // rotation
+        rotationAngle += (float)(rotationSpeed * time.DeltaTime());
+
+        rotation = Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(angleX)) *
+                   Matrix4.CreateRotationZ((float)MathHelper.DegreesToRadians(angleZ)) *
+                   Matrix4.CreateRotationY(MathHelper.DegreesToRadians(rotationAngle));
+
+        // translation
+        translation = Matrix4.CreateTranslation(0f, (float)translationCalc, 0f);
+    }
 
     protected override void OnResize(ResizeEventArgs e)
     {

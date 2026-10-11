@@ -4,12 +4,10 @@ public class Time
 {
     private double previousTime;
     Stopwatch stopWatch;
-    double totalTime;
 
     public Time()
     {
         previousTime = 0f;
-        totalTime = 0f;
         stopWatch = Stopwatch.StartNew();
     }
 
