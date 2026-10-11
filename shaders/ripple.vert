@@ -8,6 +8,8 @@ uniform float time;
 
 void main()
 {
-    gl_Position = vec4(aPos, 1.0) * mvp;
+    vec3 ripplePos = aPos;
+    ripplePos.y += 0.12 * sin(ripplePos.x * 8.0 + time * 6.0);
+    gl_Position = vec4(ripplePos, 1.0) * mvp;
     vCol = aCol;
 }

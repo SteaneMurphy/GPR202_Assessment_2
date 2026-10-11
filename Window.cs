@@ -17,8 +17,11 @@ public class MainWindow : GameWindow
         windowTitle: name of the window
     */
     string vertShaderPath = "shaders/shader.vert";
+    string rippleShaderPath = "shaders/ripple.vert";
     string fragShaderPath = "shaders/shader.frag";
-    ShaderPipeline _shader = null!;
+    ShaderPipeline _standard = null!;
+    ShaderPipeline _ripple = null!;
+    ShaderPipeline _current = null!;
     Mesh mesh = null!;
     Matrix4 scale;
     Matrix4 translation;
@@ -44,6 +47,7 @@ public class MainWindow : GameWindow
     bool wireframe = false;
     bool faceCullFront = false;
     bool faceCullBack = false;
+    bool rippleShader = false;
 
     public MainWindow(int width, int height, string windowTitle) :
     base(GameWindowSettings.Default, new NativeWindowSettings()
@@ -81,8 +85,11 @@ public class MainWindow : GameWindow
         Vector4 screenColour = new Vector4(.1f, .1f, .1f, 1f);
         GL.ClearColor(screenColour.X, screenColour.Y, screenColour.Z, screenColour.W);
 
-        _shader = new ShaderPipeline(vertShaderPath, fragShaderPath);
-        _shader.BuildShaders();
+        _standard = new ShaderPipeline(vertShaderPath, fragShaderPath);
+        _standard.BuildShaders();
+        _ripple = new ShaderPipeline(rippleShaderPath, fragShaderPath);
+        _ripple.BuildShaders();
+        _current = _standard;
 
         Torus torus = new Torus(100, 50, 0.7f, 0.3f);
         float[] vertexData = torus.CreateTorus();
@@ -118,12 +125,16 @@ public class MainWindow : GameWindow
 
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-        _shader.UseShader();
+        _current.UseShader();
 
         Matrix4 model = scale * rotation * translation;
         Matrix4 mvp = model * view * projection;
 
-        _shader.SetMatrix4("mvp", mvp);
+        if (rippleShader)
+        {
+            _current.SetFloat("time", (float)time.TotalTime());
+        }
+        _current.SetMatrix4("mvp", mvp);
 
         mesh.DrawMesh();
 
@@ -175,6 +186,12 @@ public class MainWindow : GameWindow
             }
         }
 
+        if(KeyboardState.IsKeyPressed(Keys.R))
+        {
+            rippleShader = !rippleShader;
+            _current = rippleShader ? _ripple : _standard;
+        }
+
         // view
         view = camera.CalculateViewMatrix();
 
@@ -215,7 +232,7 @@ public class MainWindow : GameWindow
     {
         base.OnUnload();
 
-        _shader.DeleteShader();
+        _current.DeleteShader();
         mesh.Cleanup();
     }
 }
