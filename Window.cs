@@ -2,6 +2,7 @@ using OpenTK.Graphics.OpenGL4;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
+using OpenTK.Windowing.GraphicsLibraryFramework;
 
 namespace OpenGLWindow;
 
@@ -25,6 +26,7 @@ public class MainWindow : GameWindow
     Matrix4 view;
     Matrix4 projection;
     Time time = new Time();
+    Camera camera = null!;
 
     float scalePulse;
     float scaleBase;
@@ -50,6 +52,10 @@ public class MainWindow : GameWindow
 
     protected override void OnLoad()
     {
+        base.OnLoad();
+        // view
+        camera = new Camera(4f, 34f, 22f, 0.2f, 0.5f, 1.5f, 10f);
+
         // scale
         scaleSpeed = 2f;
         scaleBase = 1f;
@@ -67,8 +73,6 @@ public class MainWindow : GameWindow
         amplitudeZ = 70f;
         amplitudeSpeedZ = 2f;
 
-        base.OnLoad();
-
         Vector4 screenColour = new Vector4(.1f, .1f, .1f, 1f);
         GL.ClearColor(screenColour.X, screenColour.Y, screenColour.Z, screenColour.W);
 
@@ -83,8 +87,6 @@ public class MainWindow : GameWindow
 
         mesh = new Mesh(vertexData, indexData);
         mesh.BuildMesh();
-
-        view = Matrix4.LookAt(new Vector3(2f, 1.5f, 3f), Vector3.Zero, Vector3.UnitY);
     }
 
     protected override void OnRenderFrame(FrameEventArgs args)
@@ -112,6 +114,19 @@ public class MainWindow : GameWindow
         /*
             Rotation before translation or else the translated movement also gets rotated
         */
+
+
+        // input
+        if(MouseState.IsButtonDown(MouseButton.Left))
+        {
+            camera.RotateCamera(MouseState.Delta.X, MouseState.Delta.Y);   
+        }
+
+        camera.ZoomCamera(MouseState.ScrollDelta.Y);
+
+        // view
+        view = camera.CalculateViewMatrix();
+
         // scale calcs
         double scaleCalc = scaleBase + scalePulse * MathHelper.Sin(time.TotalTime() * scaleSpeed);
 
