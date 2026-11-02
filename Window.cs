@@ -20,13 +20,14 @@ public class MainWindow : GameWindow
     string rippleShaderPath = "shaders/ripple.vert";
     string fragShaderPath = "shaders/shader.frag";
     string texturePath = "textures/water.png";
+    string objectPath = "models/BreakingBadVan/breaking_bad_1986_fleetwood_bounder_rv.obj";
 
     // classes & objects
     ShaderPipeline _standard = null!;
     ShaderPipeline _ripple = null!;
     ShaderPipeline _current = null!;
     Texture texture = null!;
-    Mesh mesh = null!;
+    List<Mesh> meshes = null!;
     Matrix4 scale;
     Matrix4 translation;
     Matrix4 rotation;
@@ -81,11 +82,15 @@ public class MainWindow : GameWindow
     protected override void OnLoad()
     {
         base.OnLoad();
+        // meshes
+        meshes = new List<Mesh>();
+
         // texture
         texture = new Texture(texturePath);
 
         // view
         camera = new Camera(4f, 34f, 22f, 0.2f, 0.5f, 1.5f, 10f);
+        camera.SetTarget(new Vector3(-50f, -30f, -46f));
 
         // scale
         scaleSpeed = 2f;
@@ -116,12 +121,18 @@ public class MainWindow : GameWindow
         _ripple.BuildShaders();
         _current = _standard;
 
-        Torus torus = new Torus(100, 50, 0.7f, 0.3f);
-        float[] vertexData = torus.CreateTorus();
-        uint[] indexData = torus.CreateIndex();
+        /*
+            Loads and converts the obj file data into material data (vertices, indices, faces, material references).
+            Treats each material as a seperate object to render and builds seperate meshes.
+        */
+        MaterialPart[] materialData = ObjectLoader.ParseObjectData(objectPath);
 
-        mesh = new Mesh(vertexData, indexData);
-        mesh.BuildMesh();
+        foreach (MaterialPart material in materialData)
+        {
+            Mesh mesh = new Mesh(material.vertices.ToArray(), material.indices.ToArray());
+            mesh.BuildMesh();
+            meshes.Add(mesh);
+        }
     }
 
     /*
@@ -154,7 +165,8 @@ public class MainWindow : GameWindow
         _current.UseShader();                                            // uniforms below go to whichever program is active
 
         // scale, then rotate, then translate. Rotation before translation or else the translated movement also gets rotated
-        Matrix4 model = scale * rotation * translation;
+        // Matrix4 model = scale * rotation * translation;
+        Matrix4 model = Matrix4.Identity;
         // Matrix4 mvp = model * view * projection;
 
         if (rippleShader)
@@ -169,7 +181,10 @@ public class MainWindow : GameWindow
         _current.SetFloat("textureMix", textureOn ? 1f : 0f);
         texture.UseTexture();
 
-        mesh.DrawMesh();
+        foreach (Mesh mesh in meshes)
+        {
+            mesh.DrawMesh();
+        }
 
         SwapBuffers();
     }
@@ -233,28 +248,28 @@ public class MainWindow : GameWindow
         // view
         view = camera.CalculateViewMatrix();
 
-        // scale calc
-        double scaleCalc = scaleBase + scalePulse * MathHelper.Sin(time.TotalTime() * scaleSpeed);
+        // // scale calc
+        // double scaleCalc = scaleBase + scalePulse * MathHelper.Sin(time.TotalTime() * scaleSpeed);
 
-        // rotation calcs
-        double angleX = amplitudeX * MathHelper.Sin(time.TotalTime() * amplitudeSpeedX);
-        double angleZ = amplitudeZ * MathHelper.Sin(time.TotalTime() * amplitudeSpeedZ);
+        // // rotation calcs
+        // double angleX = amplitudeX * MathHelper.Sin(time.TotalTime() * amplitudeSpeedX);
+        // double angleZ = amplitudeZ * MathHelper.Sin(time.TotalTime() * amplitudeSpeedZ);
 
-        //translation calc
-        double translationCalc = translationAmt * MathHelper.Sin(time.TotalTime() * translationSpeed);
+        // //translation calc
+        // double translationCalc = translationAmt * MathHelper.Sin(time.TotalTime() * translationSpeed);
 
-        // scale
-        scale = Matrix4.CreateScale((float)scaleCalc);
+        // // scale
+        // scale = Matrix4.CreateScale((float)scaleCalc);
 
-        // rotation
-        rotationAngle += (float)(rotationSpeed * time.DeltaTime());
+        // // rotation
+        // rotationAngle += (float)(rotationSpeed * time.DeltaTime());
 
-        rotation = Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(angleX)) *
-                   Matrix4.CreateRotationZ((float)MathHelper.DegreesToRadians(angleZ)) *
-                   Matrix4.CreateRotationY(MathHelper.DegreesToRadians(rotationAngle));
+        // rotation = Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(angleX)) *
+        //            Matrix4.CreateRotationZ((float)MathHelper.DegreesToRadians(angleZ)) *
+        //            Matrix4.CreateRotationY(MathHelper.DegreesToRadians(rotationAngle));
 
-        // translation
-        translation = Matrix4.CreateTranslation(0f, (float)translationCalc, 0f);
+        // // translation
+        // translation = Matrix4.CreateTranslation(0f, (float)translationCalc, 0f);
     }
 
     /*
@@ -280,7 +295,10 @@ public class MainWindow : GameWindow
         _standard.DeleteShader();
         _ripple.DeleteShader();
         texture.Cleanup();
-        mesh.Cleanup();
+        foreach (Mesh mesh in meshes)
+        {
+            mesh.Cleanup();
+        }
     }
 }
 
