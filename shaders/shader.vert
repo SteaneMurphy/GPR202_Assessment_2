@@ -11,18 +11,22 @@
 */
 
 layout (location = 0) in vec3 aPos;             // vertices position (vector3)
-layout (location = 1) in vec3 aCol;             // vertices colour (vector3)
+layout (location = 1) in vec3 aNorm;            // vertices normal (vector3)
 layout (location = 2) in vec2 aUV;              // vertices UV (vector2)
 
-uniform mat4 mvp;                               // mvp = model * view * projection (matrix4)
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+// uniform mat4 mvp;                               // mvp = model * view * projection (matrix4)
 
-out vec3 vCol;                                  // colour vertices out to frag
+out vec3 vNorm;                                 // normal vertices out to frag
 out vec2 vUV;                                   // UV vertices out to frag
 
 void main()
 {
-    gl_Position = vec4(aPos, 1.0) * mvp;        // multiplies the position vertices by the mvp (model/view/projection) matrix
-    vCol = aCol;                                // assigns the colours out
+    vec4 worldPos = vec4(aPos, 1.0) * model;    // creates the world space vector from the model matrix -> world space (split for lighting later)
+    gl_Position = worldPos * view * projection; // multiplies each vertice by view and projection matrix -> clip space
+    vNorm = aNorm;                              // assigns the colours out
     vUV = aUV;                                  // assigns the UVs out
 }
 

@@ -155,13 +155,16 @@ public class MainWindow : GameWindow
 
         // scale, then rotate, then translate. Rotation before translation or else the translated movement also gets rotated
         Matrix4 model = scale * rotation * translation;
-        Matrix4 mvp = model * view * projection;
+        // Matrix4 mvp = model * view * projection;
 
         if (rippleShader)
         {
             _current.SetFloat("time", (float)time.TotalTime());
         }
-        _current.SetMatrix4("mvp", mvp);
+        _current.SetMatrix4("model", model);
+        _current.SetMatrix4("view", view);
+        _current.SetMatrix4("projection", projection);
+        // _current.SetMatrix4("mvp", mvp);
 
         _current.SetFloat("textureMix", textureOn ? 1f : 0f);
         texture.UseTexture();

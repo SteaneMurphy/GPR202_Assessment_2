@@ -482,3 +482,6 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# personal planning notes
+ASSESSMENT2_TODO.md

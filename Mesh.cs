@@ -50,7 +50,7 @@ public class Mesh
         GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, stride, 0);                      // position: 3 floats from the start
         GL.EnableVertexAttribArray(0);
 
-        GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, stride, 3 * sizeof(float));      // colour: 3 floats after the position
+        GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, stride, 3 * sizeof(float));      // normal: 3 floats after the position
         GL.EnableVertexAttribArray(1);
 
         GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, stride, 6 * sizeof(float));      // UV: 2 floats after the colour

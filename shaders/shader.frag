@@ -9,16 +9,15 @@
     pixel.
 */
 uniform sampler2D tex;              // texture to be rendered
-uniform float textureMix;           // amount of texture/colour mix to be applied (0 = full vertex colour, 1 = full texture)
 
-in vec3 vCol;                       // colours sent to frag
+in vec3 vNorm;                      // normals sent to frag
 in vec2 vUV;                        // UVs sent to frag
 
 out vec4 fragColour;                // pixel colour out
 
 void main()
 {
-    fragColour = mix(vec4(vCol, 1.0), texture(tex, vUV), textureMix);
+    fragColour = texture(tex, vUV);
 }
 
 /*
