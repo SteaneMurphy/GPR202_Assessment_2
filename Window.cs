@@ -17,14 +17,23 @@ public class MainWindow : GameWindow
 {
     // file paths
     string vertShaderPath = "shaders/shader.vert";
-    string rippleShaderPath = "shaders/ripple.vert";
+    string skyboxVertShaderPath = "shaders/skybox.vert";
     string fragShaderPath = "shaders/shader.frag";
+    string skyboxFragShaderPath = "shaders/skybox.frag";
     string texturePath = "textures/water.png";
     string objectPath = "models/BreakingBadVan/breaking_bad_1986_fleetwood_bounder_rv.obj";
+    string[] skyboxPaths =                                                  // cubemap face order: +X, -X, +Y, -Y, +Z, -Z
+    {
+        "Skybox/Desert/px.png",
+        "Skybox/Desert/nx.png",
+        "Skybox/Desert/py.png",
+        "Skybox/Desert/ny.png",
+        "Skybox/Desert/pz.png",
+        "Skybox/Desert/nz.png",
+    };
 
     // classes & objects
     ShaderPipeline _standard = null!;
-    ShaderPipeline _ripple = null!;
     ShaderPipeline _current = null!;
     Texture texture = null!;
     List<Mesh> meshes = null!;
@@ -35,6 +44,9 @@ public class MainWindow : GameWindow
     Matrix4 projection;
     Time time = new Time();
     Camera camera = null!;
+
+    // skybox
+    Skybox skybox = null!;
 
     // adjustable values - to be exposed to a GUI later
     float scalePulse;
@@ -54,7 +66,6 @@ public class MainWindow : GameWindow
     bool wireframe = false;
     bool faceCullFront = false;
     bool faceCullBack = false;
-    bool rippleShader = false;
     bool textureOn = false;
 
     /*
@@ -88,6 +99,9 @@ public class MainWindow : GameWindow
         // texture
         texture = new Texture(texturePath);
 
+        // skybox
+        skybox = new Skybox(skyboxPaths, skyboxVertShaderPath, skyboxFragShaderPath);
+
         // view
         camera = new Camera(4f, 34f, 22f, 0.2f, 0.5f, 1.5f, 10f);
         camera.SetTarget(new Vector3(-50f, -30f, -46f));
@@ -117,8 +131,6 @@ public class MainWindow : GameWindow
         */
         _standard = new ShaderPipeline(vertShaderPath, fragShaderPath);
         _standard.BuildShaders();
-        _ripple = new ShaderPipeline(rippleShaderPath, fragShaderPath);
-        _ripple.BuildShaders();
         _current = _standard;
 
         /*
@@ -169,10 +181,6 @@ public class MainWindow : GameWindow
         Matrix4 model = Matrix4.Identity;
         // Matrix4 mvp = model * view * projection;
 
-        if (rippleShader)
-        {
-            _current.SetFloat("time", (float)time.TotalTime());
-        }
         _current.SetMatrix4("model", model);
         _current.SetMatrix4("view", view);
         _current.SetMatrix4("projection", projection);
@@ -185,6 +193,8 @@ public class MainWindow : GameWindow
         {
             mesh.DrawMesh();
         }
+
+        skybox.DrawSkyBox(view, projection);
 
         SwapBuffers();
     }
@@ -232,12 +242,6 @@ public class MainWindow : GameWindow
                 faceCullFront = false;
                 faceCullBack = false;
             }
-        }
-
-        if(KeyboardState.IsKeyPressed(Keys.R))
-        {
-            rippleShader = !rippleShader;
-            _current = rippleShader ? _ripple : _standard;
         }
 
         if(KeyboardState.IsKeyPressed(Keys.T))
@@ -293,12 +297,13 @@ public class MainWindow : GameWindow
         base.OnUnload();
 
         _standard.DeleteShader();
-        _ripple.DeleteShader();
         texture.Cleanup();
         foreach (Mesh mesh in meshes)
         {
             mesh.Cleanup();
         }
+
+        skybox.Cleanup();
     }
 }
 

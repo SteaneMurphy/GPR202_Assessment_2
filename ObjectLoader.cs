@@ -1,11 +1,13 @@
 using OpenTK.Mathematics;
 using OpenTK.Graphics.OpenGL4;
 using System.Globalization;
+using System.Drawing;
 
 public class MaterialPart
 {
     public string Name = "";
     public string Material = "";
+    public Color colour;
     public List<float> vertices = new List<float>();
     public List<uint> indices = new List<uint>();
 }
@@ -67,6 +69,30 @@ public class ObjectLoader
         }
         return materials.ToArray();
     }
+
+    // private static Dictionary<string, MaterialPart> ParseMaterial(string path)
+    // {
+    //     MaterialPart currentMaterial = null!;
+    //     Dictionary<string, MaterialPart> materialData = new Dictionary<string, MaterialPart>();
+
+    //     foreach(string line in File.ReadLines(path))
+    //     {
+    //         string[] splits = line.Split(' ');
+
+    //         switch(splits[0])
+    //         {
+    //             case "newmtl":
+    //                 currentMaterial = new MaterialPart();
+    //                 materialData[splits[1]] = currentMaterial;
+    //                 break;
+    //             case "Kd":
+    //                 currentMaterial.colour = new Vector3(ParseFloat(splits[1]), ParseFloat(splits[2]), ParseFloat(splits[3]));
+    //                 break;
+    //             case "map_kd":
+    //                 break;
+    //         }
+    //     }
+    // }
 
     private static float ParseFloat(string input)
     {
