@@ -38,6 +38,7 @@ public class MainWindow : GameWindow
     MaterialPart[] materialData = null!;
     Dictionary<string, Texture> textures;
     List<Mesh> meshes = null!;
+    ObjectNode root = null!;
     Matrix4 scale;
     Matrix4 translation;
     Matrix4 rotation;
@@ -89,11 +90,15 @@ public class MainWindow : GameWindow
         */
         materialData = ObjectLoader.ParseObjectData(objectPath);
 
+        root = new ObjectNode("root");
+
         foreach (MaterialPart material in materialData)
         {
+            ObjectNode node = new ObjectNode(material.name);
             Mesh mesh = new Mesh(material.vertices.ToArray(), material.indices.ToArray());
             mesh.BuildMesh();
-            meshes.Add(mesh);
+            node.SetParams(material.materialPath, material.colour, mesh);
+            root.childNodes.Add(node);
         }
 
         // texture
@@ -137,31 +142,32 @@ public class MainWindow : GameWindow
 
         // scale, then rotate, then translate. Rotation before translation or else the translated movement also gets rotated
         // Matrix4 model = scale * rotation * translation;
-        Matrix4 model = Matrix4.Identity;
+        // Matrix4 model = Matrix4.Identity;
         // Matrix4 mvp = model * view * projection;
 
-        _current.SetMatrix4("model", model);
+        root.RenderNode(textures, _current, Matrix4.Identity);
+        // _current.SetMatrix4("model", model);
         _current.SetMatrix4("view", view);
         _current.SetMatrix4("projection", projection);
         // _current.SetMatrix4("mvp", mvp);
 
-        for(int i = 0; i < meshes.Count; i++)
-        {
-            MaterialPart material = materialData[i];
+        // for(int i = 0; i < meshes.Count; i++)
+        // {
+        //     MaterialPart material = materialData[i];
 
-            if (material.materialPath != "")
-            {
-                textures[material.materialPath].UseTexture();
-                _current.SetBool("useTexture", true);
-            }
-            else
-            {
-                _current.SetBool("useTexture", false);
-            }
+        //     if (material.materialPath != "")
+        //     {
+        //         textures[material.materialPath].UseTexture();
+        //         _current.SetBool("useTexture", true);
+        //     }
+        //     else
+        //     {
+        //         _current.SetBool("useTexture", false);
+        //     }
 
-            _current.SetVector3("colour", material.colour);
-            meshes[i].DrawMesh();
-        }
+        //     _current.SetVector3("colour", material.colour);
+        //     meshes[i].DrawMesh();
+        // }
 
         skybox.DrawSkyBox(view, projection);
 
@@ -251,10 +257,7 @@ public class MainWindow : GameWindow
             texture.Cleanup();
         }
 
-        foreach (Mesh mesh in meshes)
-        {
-            mesh.Cleanup();
-        }
+        root.Cleanup();
 
         skybox.Cleanup();
     }
