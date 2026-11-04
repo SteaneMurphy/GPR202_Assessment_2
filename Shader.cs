@@ -125,6 +125,18 @@ public class ShaderPipeline
         
     }
 
+    public void SetVector3(string name, Vector3 vector)
+    {
+        int location = GL.GetUniformLocation(shaderInstance, name);
+        GL.Uniform3(location, vector);
+    }
+
+    public void SetBool(string name, bool value)
+    {
+        int location = GL.GetUniformLocation(shaderInstance, name);
+        GL.Uniform1(location, value ? 1 : 0);
+    }
+
     /*
         Sends a 4x4 matrix uniform (e.g. mvp) to the shader program.
     */

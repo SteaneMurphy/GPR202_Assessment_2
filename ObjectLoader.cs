@@ -5,9 +5,10 @@ using System.Drawing;
 
 public class MaterialPart
 {
-    public string Name = "";
-    public string Material = "";
-    public Color colour;
+    public string name = "";
+    public string material = "";
+    public string materialPath = "";
+    public Vector3 colour;
     public List<float> vertices = new List<float>();
     public List<uint> indices = new List<uint>();
 }
@@ -24,6 +25,8 @@ public class ObjectLoader
         List<Vector2> uvs = new List<Vector2>();
 
         List<MaterialPart> materials = new List<MaterialPart>();
+        Dictionary<string, MaterialPart> materialData = new Dictionary<string, MaterialPart>();                              // filled from the .mtl when the mtllib line is read
+        string folder = Path.GetDirectoryName(path)!;                                                                         // mtl and texture names are relative to the obj's folder
 
         MaterialPart currentMaterial = null!;                                                                                // empty container for material, updated per obj foundw
 
@@ -56,11 +59,16 @@ public class ObjectLoader
                     break;
                 case "o":                                                                                                       // object (ie; tyre, axle, door, rim, etc)
                     currentMaterial = new MaterialPart();
-                    currentMaterial.Name = splits[1];
+                    currentMaterial.name = splits[1];
                     materials.Add(currentMaterial);
                     break;
+                case "mtllib":                                                                                                  // material file, listed before any objects
+                    materialData = ParseMaterial(Path.Combine(folder, splits[1]));
+                    break;
                 case "usemtl":                                                                                                  // material for current object, should be in order
-                    currentMaterial.Material = splits[1];
+                    currentMaterial.material = splits[1];
+                    currentMaterial.colour = materialData[splits[1]].colour;                                                    // copy the look from the mtl entry
+                    currentMaterial.materialPath = materialData[splits[1]].materialPath;
                     break;
                 default:
                     
@@ -83,29 +91,33 @@ public class ObjectLoader
         return materials.ToArray();
     }
 
-    // private static Dictionary<string, MaterialPart> ParseMaterial(string path)
-    // {
-    //     MaterialPart currentMaterial = null!;
-    //     Dictionary<string, MaterialPart> materialData = new Dictionary<string, MaterialPart>();
+    public static Dictionary<string, MaterialPart> ParseMaterial(string path)
+    {
+        MaterialPart currentMaterial = null!;
+        Dictionary<string, MaterialPart> materialData = new Dictionary<string, MaterialPart>();
+        string folder = Path.GetDirectoryName(path)!;                                               // texture names are relative to the mtl's folder
 
-    //     foreach(string line in File.ReadLines(path))
-    //     {
-    //         string[] splits = line.Split(' ');
+        foreach(string line in File.ReadLines(path))
+        {
+            string[] splits = line.Split(' ');
 
-    //         switch(splits[0])
-    //         {
-    //             case "newmtl":
-    //                 currentMaterial = new MaterialPart();
-    //                 materialData[splits[1]] = currentMaterial;
-    //                 break;
-    //             case "Kd":
-    //                 currentMaterial.colour = new Vector3(ParseFloat(splits[1]), ParseFloat(splits[2]), ParseFloat(splits[3]));
-    //                 break;
-    //             case "map_kd":
-    //                 break;
-    //         }
-    //     }
-    // }
+            switch(splits[0])
+            {
+                case "newmtl":
+                    currentMaterial = new MaterialPart();
+                    materialData[splits[1]] = currentMaterial;
+                    break;
+                case "Kd":
+                    currentMaterial.colour = new Vector3(ParseFloat(splits[1]), ParseFloat(splits[2]), ParseFloat(splits[3]));
+                    break;
+                case "map_Kd":
+                    currentMaterial.materialPath = Path.Combine(folder, splits[1]);                 // e.g. models/BreakingBadVan/BlackMetal_baseColor.png
+                    break;
+            }
+        }
+
+        return materialData;
+    }
 
     private static float ParseFloat(string input)
     {

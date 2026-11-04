@@ -9,6 +9,8 @@
     pixel.
 */
 uniform sampler2D tex;              // texture to be rendered
+uniform vec3 colour;
+uniform bool useTexture;
 
 in vec3 vNorm;                      // normals sent to frag
 in vec2 vUV;                        // UVs sent to frag
@@ -17,7 +19,14 @@ out vec4 fragColour;                // pixel colour out
 
 void main()
 {
-    fragColour = texture(tex, vUV);
+    if (useTexture)
+    {
+        fragColour = texture(tex, vUV) * vec4(colour, 1.0);
+    }
+    else
+    {
+        fragColour = vec4(colour, 1.0);
+    }
 }
 
 /*

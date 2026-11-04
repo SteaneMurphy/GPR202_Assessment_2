@@ -35,7 +35,8 @@ public class MainWindow : GameWindow
     // classes & objects
     ShaderPipeline _standard = null!;
     ShaderPipeline _current = null!;
-    Texture texture = null!;
+    MaterialPart[] materialData = null!;
+    Dictionary<string, Texture> textures;
     List<Mesh> meshes = null!;
     Matrix4 scale;
     Matrix4 translation;
@@ -47,9 +48,6 @@ public class MainWindow : GameWindow
 
     // skybox
     Skybox skybox = null!;
-
-    // toggles
-    bool textureOn = false;
 
     /*
         Main window setup. Create new extended GameWindow class.
@@ -81,8 +79,28 @@ public class MainWindow : GameWindow
         // meshes
         meshes = new List<Mesh>();
 
+        /*
+            Loads and converts the obj file data into material data (vertices, indices, faces, material references).
+            Treats each material as a seperate object to render and builds seperate meshes.
+        */
+        materialData = ObjectLoader.ParseObjectData(objectPath);
+
+        foreach (MaterialPart material in materialData)
+        {
+            Mesh mesh = new Mesh(material.vertices.ToArray(), material.indices.ToArray());
+            mesh.BuildMesh();
+            meshes.Add(mesh);
+        }
+
         // texture
-        texture = new Texture(texturePath);
+        textures = new Dictionary<string, Texture>();
+        foreach(MaterialPart material in materialData)
+        {
+            if(material.materialPath != "" && !textures.ContainsKey(material.materialPath))
+            {
+                textures[material.materialPath] = new Texture(material.materialPath);
+            }
+        }
 
         // skybox
         skybox = new Skybox(skyboxPaths, skyboxVertShaderPath, skyboxFragShaderPath);
@@ -99,19 +117,6 @@ public class MainWindow : GameWindow
         _standard = new ShaderPipeline(vertShaderPath, fragShaderPath);
         _standard.BuildShaders();
         _current = _standard;
-
-        /*
-            Loads and converts the obj file data into material data (vertices, indices, faces, material references).
-            Treats each material as a seperate object to render and builds seperate meshes.
-        */
-        MaterialPart[] materialData = ObjectLoader.ParseObjectData(objectPath);
-
-        foreach (MaterialPart material in materialData)
-        {
-            Mesh mesh = new Mesh(material.vertices.ToArray(), material.indices.ToArray());
-            mesh.BuildMesh();
-            meshes.Add(mesh);
-        }
     }
 
     /*
@@ -136,12 +141,22 @@ public class MainWindow : GameWindow
         _current.SetMatrix4("projection", projection);
         // _current.SetMatrix4("mvp", mvp);
 
-        _current.SetFloat("textureMix", textureOn ? 1f : 0f);
-        texture.UseTexture();
-
-        foreach (Mesh mesh in meshes)
+        for(int i = 0; i < meshes.Count; i++)
         {
-            mesh.DrawMesh();
+            MaterialPart material = materialData[i];
+
+            if (material.materialPath != "")
+            {
+                textures[material.materialPath].UseTexture();
+                _current.SetBool("useTexture", true);
+            }
+            else
+            {
+                _current.SetBool("useTexture", false);
+            }
+
+            _current.SetVector3("colour", material.colour);
+            meshes[i].DrawMesh();
         }
 
         skybox.DrawSkyBox(view, projection);
@@ -158,12 +173,6 @@ public class MainWindow : GameWindow
         base.OnUpdateFrame(args);
         // deltaTime
         double deltaTime = time.DeltaTime();
-
-        // input
-        if(KeyboardState.IsKeyPressed(Keys.T))
-        {
-            textureOn = !textureOn;
-        }
 
         if(KeyboardState.IsKeyPressed(Keys.Escape))
         {
@@ -230,7 +239,12 @@ public class MainWindow : GameWindow
         base.OnUnload();
 
         _standard.DeleteShader();
-        texture.Cleanup();
+
+        foreach (Texture texture in textures.Values)
+        {
+            texture.Cleanup();
+        }
+
         foreach (Mesh mesh in meshes)
         {
             mesh.Cleanup();
