@@ -24,12 +24,12 @@ public class MainWindow : GameWindow
     string objectPath = "models/BreakingBadVan/breaking_bad_1986_fleetwood_bounder_rv.obj";
     string[] skyboxPaths =                                                  // cubemap face order: +X, -X, +Y, -Y, +Z, -Z
     {
-        "Skybox/Desert/px.png",
-        "Skybox/Desert/nx.png",
-        "Skybox/Desert/py.png",
-        "Skybox/Desert/ny.png",
-        "Skybox/Desert/pz.png",
-        "Skybox/Desert/nz.png",
+        "Skybox/AnimeDesert/px.png",
+        "Skybox/AnimeDesert/nx.png",
+        "Skybox/AnimeDesert/py.png",
+        "Skybox/AnimeDesert/ny.png",
+        "Skybox/AnimeDesert/pz.png",
+        "Skybox/AnimeDesert/nz.png",
     };
 
     // classes & objects
@@ -48,24 +48,7 @@ public class MainWindow : GameWindow
     // skybox
     Skybox skybox = null!;
 
-    // adjustable values - to be exposed to a GUI later
-    float scalePulse;
-    float scaleBase;
-    float scaleSpeed;
-    float translationAmt;
-    float translationSpeed;
-    float rotationSpeed;
-    float rotationAngle;
-    float amplitudeX;
-    float amplitudeSpeedX;
-    float amplitudeZ;
-    float amplitudeSpeedZ;
-
     // toggles
-    bool depthTest = true;
-    bool wireframe = false;
-    bool faceCullFront = false;
-    bool faceCullBack = false;
     bool textureOn = false;
 
     /*
@@ -93,6 +76,8 @@ public class MainWindow : GameWindow
     protected override void OnLoad()
     {
         base.OnLoad();
+        GL.Enable(EnableCap.DepthTest);
+
         // meshes
         meshes = new List<Mesh>();
 
@@ -103,25 +88,7 @@ public class MainWindow : GameWindow
         skybox = new Skybox(skyboxPaths, skyboxVertShaderPath, skyboxFragShaderPath);
 
         // view
-        camera = new Camera(4f, 34f, 22f, 0.2f, 0.5f, 1.5f, 10f);
-        camera.SetTarget(new Vector3(-50f, -30f, -46f));
-
-        // scale
-        scaleSpeed = 2f;
-        scaleBase = 1f;
-        scalePulse = 0.2f;
-
-        // translation
-        translationAmt = 1f;
-        translationSpeed = 1.5f;
-
-        // rotation
-        rotationSpeed = 5f;
-        rotationAngle = 10f;
-        amplitudeX = 45f;
-        amplitudeSpeedX = 1f;
-        amplitudeZ = 70f;
-        amplitudeSpeedZ = 2f;
+        camera = new Camera(0.1f, 3f, new Vector3(-12f, 1.5f, 0f));
 
         Vector4 screenColour = new Vector4(.1f, .1f, .1f, 1f);
         GL.ClearColor(screenColour.X, screenColour.Y, screenColour.Z, screenColour.W);
@@ -154,23 +121,6 @@ public class MainWindow : GameWindow
     protected override void OnRenderFrame(FrameEventArgs args)
     {
         base.OnRenderFrame(args);
-
-        if (depthTest) GL.Enable(EnableCap.DepthTest); else GL.Disable(EnableCap.DepthTest);
-        if (wireframe) GL.PolygonMode(TriangleFace.FrontAndBack, PolygonMode.Line); else GL.PolygonMode(TriangleFace.FrontAndBack, PolygonMode.Fill);
-        if (faceCullFront)
-        {
-            GL.Enable(EnableCap.CullFace);
-            GL.CullFace(TriangleFace.Front);
-        }
-        else if (faceCullBack)
-        {
-            GL.Enable(EnableCap.CullFace);
-            GL.CullFace(TriangleFace.Back);
-        }
-        else
-        {
-            GL.Disable(EnableCap.CullFace);
-        }
 
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
@@ -206,51 +156,34 @@ public class MainWindow : GameWindow
     protected override void OnUpdateFrame(FrameEventArgs args)
     {
         base.OnUpdateFrame(args);
+        // deltaTime
+        double deltaTime = time.DeltaTime();
 
         // input
-        if(MouseState.IsButtonDown(MouseButton.Left))
-        {
-            camera.RotateCamera(MouseState.Delta.X, MouseState.Delta.Y);   
-        }
-
-        camera.ZoomCamera(MouseState.ScrollDelta.Y);
-
-        if(KeyboardState.IsKeyPressed(Keys.D))
-        {
-            depthTest = !depthTest;
-        }
-
-        if(KeyboardState.IsKeyPressed(Keys.W))
-        {
-            wireframe = !wireframe;
-        }
-
-        // F cycles: off -> cull front -> cull back -> off
-        if(KeyboardState.IsKeyPressed(Keys.F))
-        {
-            if(!faceCullFront && !faceCullBack)
-            {
-                faceCullFront = true;
-            }
-            else if(faceCullFront)
-            {
-                faceCullFront = false;
-                faceCullBack = true;
-            }
-            else if(faceCullBack)
-            {
-                faceCullFront = false;
-                faceCullBack = false;
-            }
-        }
-
         if(KeyboardState.IsKeyPressed(Keys.T))
         {
             textureOn = !textureOn;
         }
 
+        if(KeyboardState.IsKeyPressed(Keys.Escape))
+        {
+            Close();
+        }
+
+        // WASD movement
+        float forwardInput = 0f, rightInput = 0f, upInput = 0f;
+        if (KeyboardState.IsKeyDown(Keys.W)) forwardInput += 1f;
+        if (KeyboardState.IsKeyDown(Keys.S)) forwardInput -= 1f;
+        if (KeyboardState.IsKeyDown(Keys.D)) rightInput += 1f;
+        if (KeyboardState.IsKeyDown(Keys.A)) rightInput -= 1f;
+        if (KeyboardState.IsKeyDown(Keys.E)) upInput += 1f;
+        if (KeyboardState.IsKeyDown(Keys.Q)) upInput -= 1f;
+
+        camera.UpdateDirection(MouseState.Delta.X, MouseState.Delta.Y);
+        camera.UpdateVectors(forwardInput, rightInput, upInput, deltaTime);
+
         // view
-        view = camera.CalculateViewMatrix();
+        view = camera.UpdateViewMatrix();
 
         // // scale calc
         // double scaleCalc = scaleBase + scalePulse * MathHelper.Sin(time.TotalTime() * scaleSpeed);

@@ -67,6 +67,19 @@ public class ObjectLoader
                     break;
             }
         }
+
+        Vector3 offset = CalculateObjectBounds(positions);
+        
+        foreach(MaterialPart material in materials)
+        {
+            for(int i = 0; i < material.vertices.Count; i += 8)
+            {
+                material.vertices[i] -= offset.X;
+                material.vertices[i+1] -= offset.Y;
+                material.vertices[i+2] -= offset.Z;
+            }
+        }
+
         return materials.ToArray();
     }
 
@@ -105,5 +118,29 @@ public class ObjectLoader
             Console.WriteLine("ERROR: ParseFloat - could not parse float, likely empty string");
             return 0f;
         }
+    }
+
+    private static Vector3 CalculateObjectBounds(List<Vector3> positions)
+    {
+        Vector3 minValues = positions[0];
+        Vector3 maxValues = positions[0];
+
+        foreach(Vector3 position in positions)
+        {
+            if(position.X < minValues.X) minValues.X = position.X;
+            if(position.Y < minValues.Y) minValues.Y = position.Y;
+            if(position.Z < minValues.Z) minValues.Z = position.Z;
+            if(position.X > maxValues.X) maxValues.X = position.X;
+            if(position.Y > maxValues.Y) maxValues.Y = position.Y;
+            if(position.Z > maxValues.Z) maxValues.Z = position.Z;
+        }
+
+        Vector3 offset = Vector3.Zero;
+
+        offset.X = (minValues.X + maxValues.X) / 2;
+        offset.Y = minValues.Y;
+        offset.Z = (minValues.Z + maxValues.Z) / 2;
+
+        return offset;
     }
 }
