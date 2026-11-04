@@ -14,6 +14,8 @@ public class Camera
 
     // movement
     float moveSpeed;
+    float moveSpeedDefault;
+    float moveSpeedMultiplier = 3f;
     Vector3 forwardDirection;
     Vector3 rightDirection;
     Vector3 currentPosition;
@@ -27,6 +29,7 @@ public class Camera
         currentPosition = _position;
         sensitivity = _sensitivity;
         moveSpeed = _moveSpeed;
+        moveSpeedDefault = _moveSpeed;
         UpdateDirection(0f, 0f);
     }
 
@@ -60,6 +63,11 @@ public class Camera
     public Matrix4 UpdateViewMatrix()
     {
         return Matrix4.LookAt(currentPosition, currentPosition + forwardDirection, Vector3.UnitY);
+    }
+
+    public void UpdateMoveSpeed(bool increasedMoveSpeed)
+    {
+        moveSpeed = increasedMoveSpeed ? moveSpeedDefault * moveSpeedMultiplier : moveSpeedDefault;
     }
 }
 

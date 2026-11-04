@@ -21,7 +21,7 @@ public class MainWindow : GameWindow
     string fragShaderPath = "shaders/shader.frag";
     string skyboxFragShaderPath = "shaders/skybox.frag";
     string texturePath = "textures/water.png";
-    string objectPath = "models/BreakingBadVan/breaking_bad_1986_fleetwood_bounder_rv.obj";
+    string objectPath = "models/BreakingBadVan/RV.obj";
     string[] skyboxPaths =                                                  // cubemap face order: +X, -X, +Y, -Y, +Z, -Z
     {
         "Skybox/AnimeDesert/px.png",
@@ -49,6 +49,9 @@ public class MainWindow : GameWindow
     // skybox
     Skybox skybox = null!;
 
+    // camera
+    bool increasedMoveSpeed = false;
+
     /*
         Main window setup. Create new extended GameWindow class.
 
@@ -74,6 +77,7 @@ public class MainWindow : GameWindow
     protected override void OnLoad()
     {
         base.OnLoad();
+        // CursorState = CursorState.Grabbed;
         GL.Enable(EnableCap.DepthTest);
 
         // meshes
@@ -190,6 +194,8 @@ public class MainWindow : GameWindow
 
         camera.UpdateDirection(MouseState.Delta.X, MouseState.Delta.Y);
         camera.UpdateVectors(forwardInput, rightInput, upInput, deltaTime);
+
+        camera.UpdateMoveSpeed(KeyboardState.IsKeyDown(Keys.LeftShift));
 
         // view
         view = camera.UpdateViewMatrix();

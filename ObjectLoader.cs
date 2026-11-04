@@ -8,7 +8,7 @@ public class MaterialPart
     public string name = "";
     public string material = "";
     public string materialPath = "";
-    public Vector3 colour;
+    public Vector3 colour = Vector3.One;
     public List<float> vertices = new List<float>();
     public List<uint> indices = new List<uint>();
 }
