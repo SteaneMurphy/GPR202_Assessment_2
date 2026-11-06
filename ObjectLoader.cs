@@ -1,7 +1,5 @@
 using OpenTK.Mathematics;
-using OpenTK.Graphics.OpenGL4;
 using System.Globalization;
-using System.Drawing;
 
 public class MaterialPart
 {

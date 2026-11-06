@@ -46,12 +46,13 @@ public class MainWindow : GameWindow
     Matrix4 projection;
     Time time = new Time();
     Camera camera = null!;
+    RVController rvController = null!;
 
     // skybox
     Skybox skybox = null!;
 
-    // camera
-    bool increasedMoveSpeed = false;
+    // mouse
+    bool firstDelta = true;
 
     /*
         Main window setup. Create new extended GameWindow class.
@@ -84,6 +85,9 @@ public class MainWindow : GameWindow
         // meshes
         meshes = new List<Mesh>();
 
+        // scene specific data - RV
+        rvController = new RVController();
+
         /*
             Loads and converts the obj file data into material data (vertices, indices, faces, material references).
             Treats each material as a seperate object to render and builds seperate meshes.
@@ -95,6 +99,12 @@ public class MainWindow : GameWindow
         foreach (MaterialPart material in materialData)
         {
             ObjectNode node = new ObjectNode(material.name);
+
+            if(material.name.Contains("wheel"))
+            {
+                rvController.SetWheelReference(node, material);    
+            }
+
             Mesh mesh = new Mesh(material.vertices.ToArray(), material.indices.ToArray());
             mesh.BuildMesh();
             node.SetParams(material.materialPath, material.colour, mesh);
@@ -151,23 +161,6 @@ public class MainWindow : GameWindow
         _current.SetMatrix4("projection", projection);
         // _current.SetMatrix4("mvp", mvp);
 
-        // for(int i = 0; i < meshes.Count; i++)
-        // {
-        //     MaterialPart material = materialData[i];
-
-        //     if (material.materialPath != "")
-        //     {
-        //         textures[material.materialPath].UseTexture();
-        //         _current.SetBool("useTexture", true);
-        //     }
-        //     else
-        //     {
-        //         _current.SetBool("useTexture", false);
-        //     }
-
-        //     _current.SetVector3("colour", material.colour);
-        //     meshes[i].DrawMesh();
-        // }
 
         skybox.DrawSkyBox(view, projection);
 
@@ -198,9 +191,18 @@ public class MainWindow : GameWindow
         if (KeyboardState.IsKeyDown(Keys.E)) upInput += 1f;
         if (KeyboardState.IsKeyDown(Keys.Q)) upInput -= 1f;
 
-        camera.UpdateDirection(MouseState.Delta.X, MouseState.Delta.Y);
-        camera.UpdateVectors(forwardInput, rightInput, upInput, deltaTime);
+        if (firstDelta)
+        {
+            firstDelta = false;                                                     // skip first mouse read
+        }
+        else
+        {
+            camera.UpdateDirection(MouseState.Delta.X, MouseState.Delta.Y);   
+        }
 
+        if (KeyboardState.IsKeyDown(Keys.R)) rvController.RotateWheels((float)deltaTime);
+
+        camera.UpdateVectors(forwardInput, rightInput, upInput, deltaTime);
         camera.UpdateMoveSpeed(KeyboardState.IsKeyDown(Keys.LeftShift));
 
         // view
