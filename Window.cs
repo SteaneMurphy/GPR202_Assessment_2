@@ -201,6 +201,8 @@ public class MainWindow : GameWindow
         }
 
         if (KeyboardState.IsKeyDown(Keys.R)) rvController.RotateWheels((float)deltaTime);
+        if (KeyboardState.IsKeyDown(Keys.Left)) rvController.SteerWheels(Keys.Left, (float)deltaTime);
+        if (KeyboardState.IsKeyDown(Keys.Right)) rvController.SteerWheels(Keys.Right, (float)deltaTime);
 
         camera.UpdateVectors(forwardInput, rightInput, upInput, deltaTime);
         camera.UpdateMoveSpeed(KeyboardState.IsKeyDown(Keys.LeftShift));

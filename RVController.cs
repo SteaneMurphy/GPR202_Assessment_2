@@ -1,9 +1,13 @@
 using OpenTK.Mathematics;
+using OpenTK.Windowing.GraphicsLibraryFramework;
 
 public class RVController
 {
     Dictionary<string, ObjectNode> wheels = new Dictionary<string, ObjectNode>();
     float rotationSpeed = 50f;
+    float steerSpeed = 30f;
+    float steerAngle = 0f;
+    float maxSteerAngle = 30f;
     float wheelSkewY = -5.2f;   // model's built-in yaw, flip sign if the spin looks worse
 
     public void SetWheelReference(ObjectNode wheelRef, MaterialPart material)
@@ -79,5 +83,27 @@ public class RVController
         {
             wheel.rotation.X += rotationSpeed * deltaTime;
         }
+    }
+
+    public void SteerWheels(Keys key, float deltaTime)
+    {
+        
+
+        switch (key)
+        {
+            case Keys.Left:
+            steerAngle += steerSpeed * deltaTime;
+                break;
+            case Keys.Right:
+            steerAngle -= steerSpeed * deltaTime;
+                break;
+            default:
+                break;
+        }
+
+        steerAngle = MathHelper.Clamp(steerAngle, -maxSteerAngle, maxSteerAngle);
+
+        wheels["frontRight"].rotation.Y = wheelSkewY + steerAngle;
+        wheels["frontLeft"].rotation.Y = wheelSkewY + steerAngle;
     }
 }
