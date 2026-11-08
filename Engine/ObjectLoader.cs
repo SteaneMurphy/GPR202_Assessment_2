@@ -109,7 +109,7 @@ public class ObjectLoader
                     currentMaterial.colour = new Vector3(ParseFloat(splits[1]), ParseFloat(splits[2]), ParseFloat(splits[3]));
                     break;
                 case "map_Kd":
-                    currentMaterial.materialPath = Path.Combine(folder, splits[1]);                 // e.g. models/BreakingBadVan/BlackMetal_baseColor.png
+                    currentMaterial.materialPath = Path.Combine(folder, splits[1]);                 // e.g. Assets/Models/BreakingBadVan/BlackMetal_baseColor.png
                     break;
             }
         }

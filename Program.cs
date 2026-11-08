@@ -8,7 +8,7 @@ using OpenGLWindow;
         - height (px)
         - title (string)
 */
-using (MainWindow window = new MainWindow(1100, 720, "GPR202 Assessment 1"))
+using (MainWindow window = new MainWindow(1100, 720, "GPR202 Assessment 2"))
 {
     window.Run();
 }

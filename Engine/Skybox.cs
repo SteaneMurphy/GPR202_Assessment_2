@@ -25,7 +25,7 @@ public class Skybox
     uint[] indices =
     {
         0, 1, 2,  2, 3, 0,  // back
-        4, 5, 6,  6, 7, 4,  // front
+        4, 6, 5,  6, 4, 7,  // front
         0, 3, 7,  7, 4, 0,  // left
         1, 5, 6,  6, 2, 1,  // right
         0, 4, 5,  5, 1, 0,  // bottom
@@ -81,3 +81,9 @@ public class Skybox
         cubemap.Cleanup();
     }
 }
+
+/*
+
+    Wisniowski, M. (2018). HDRI to CubeMap [Computer software]. https://matheowis.github.io/HDRI-to-CubeMap/
+
+*/

@@ -69,6 +69,11 @@ public class Camera
     {
         moveSpeed = increasedMoveSpeed ? moveSpeedDefault * moveSpeedMultiplier : moveSpeedDefault;
     }
+
+    public Vector3 GetPosition()
+    {
+        return currentPosition;
+    }
 }
 
 /*

@@ -16,20 +16,21 @@ namespace OpenGLWindow;
 public class MainWindow : GameWindow
 {
     // file paths
-    string vertShaderPath = "shaders/shader.vert";
-    string skyboxVertShaderPath = "shaders/skybox.vert";
-    string fragShaderPath = "shaders/shader.frag";
-    string skyboxFragShaderPath = "shaders/skybox.frag";
+    string vertShaderPath = "Engine/Shaders/shader.vert";
+    string skyboxVertShaderPath = "Engine/Shaders/skybox.vert";
+    string fragShaderPath = "Engine/Shaders/shader.frag";
+    string skyboxFragShaderPath = "Engine/Shaders/skybox.frag";
     string texturePath = "textures/water.png";
-    string objectPath = "models/BreakingBadVan/RV.obj";
+    string objectPath = "Assets/Models/BreakingBadVan/RV.obj";
+    string groundTexturePath = "Assets/Textures/sand.jpg";
     string[] skyboxPaths =                                                  // cubemap face order: +X, -X, +Y, -Y, +Z, -Z
     {
-        "Skybox/AnimeDesert/px.png",
-        "Skybox/AnimeDesert/nx.png",
-        "Skybox/AnimeDesert/py.png",
-        "Skybox/AnimeDesert/ny.png",
-        "Skybox/AnimeDesert/pz.png",
-        "Skybox/AnimeDesert/nz.png",
+        "Assets/Skybox/AnimeDesert/px.png",
+        "Assets/Skybox/AnimeDesert/nx.png",
+        "Assets/Skybox/AnimeDesert/py.png",
+        "Assets/Skybox/AnimeDesert/ny.png",
+        "Assets/Skybox/AnimeDesert/pz.png",
+        "Assets/Skybox/AnimeDesert/nz.png",
     };
 
     // classes & objects
@@ -39,6 +40,7 @@ public class MainWindow : GameWindow
     Dictionary<string, Texture> textures;
     List<Mesh> meshes = null!;
     ObjectNode root = null!;
+    ObjectNode sceneRoot = null!;
     Matrix4 scale;
     Matrix4 translation;
     Matrix4 rotation;
@@ -51,8 +53,13 @@ public class MainWindow : GameWindow
     // skybox
     Skybox skybox = null!;
 
+    // ground
+    Mesh groundMesh = null!;
+    Texture groundTexture = null!;
+
     // mouse
     bool firstDelta = true;
+
 
     /*
         Main window setup. Create new extended GameWindow class.
@@ -85,30 +92,27 @@ public class MainWindow : GameWindow
         // meshes
         meshes = new List<Mesh>();
 
-        // scene specific data - RV
+        // scene specific data - controllers
         rvController = new RVController();
 
         /*
             Loads and converts the obj file data into material data (vertices, indices, faces, material references).
             Treats each material as a seperate object to render and builds seperate meshes.
         */
-        materialData = ObjectLoader.ParseObjectData(objectPath);
+        sceneRoot = new ObjectNode("sceneRoot");
 
-        root = new ObjectNode("root");
-
-        foreach (MaterialPart material in materialData)
+        foreach (string objectPath in Directory.GetFiles("Assets/Models", "*.obj", SearchOption.AllDirectories))
         {
-            ObjectNode node = new ObjectNode(material.name);
+            materialData = ObjectLoader.ParseObjectData(objectPath);
 
-            if(material.name.Contains("wheel"))
-            {
-                rvController.SetWheelReference(node, material);    
-            }
+            root = new ObjectNode("root");
+            root.AddParts(materialData);            // build the node tree
 
-            Mesh mesh = new Mesh(material.vertices.ToArray(), material.indices.ToArray());
-            mesh.BuildMesh();
-            node.SetParams(material.materialPath, material.colour, mesh);
-            root.childNodes.Add(node);
+            sceneRoot.childNodes.Add(root);         // add object tree to the scene root
+
+            rvController.Setup(root);               // RV-specific fixes to the wheel nodes' vertex data
+
+            root.BuildMeshes();                     // Build meshes on GPU after individual model vertex changes (RV above)   
         }
 
         // texture
@@ -123,6 +127,11 @@ public class MainWindow : GameWindow
 
         // skybox
         skybox = new Skybox(skyboxPaths, skyboxVertShaderPath, skyboxFragShaderPath);
+
+        // ground
+        groundMesh = new Mesh(Ground.vertices, Ground.indices);
+        groundMesh.BuildMesh();
+        groundTexture = new Texture(groundTexturePath);
 
         // view
         camera = new Camera(0.1f, 3f, new Vector3(-12f, 1.5f, 0f));
@@ -155,12 +164,18 @@ public class MainWindow : GameWindow
         // Matrix4 model = Matrix4.Identity;
         // Matrix4 mvp = model * view * projection;
 
-        root.RenderNode(textures, _current, Matrix4.Identity);
-        // _current.SetMatrix4("model", model);
         _current.SetMatrix4("view", view);
         _current.SetMatrix4("projection", projection);
-        // _current.SetMatrix4("mvp", mvp);
+        sceneRoot.RenderNode(textures, _current, Matrix4.Identity);
 
+        groundTexture.UseTexture();
+        _current.SetBool("useTexture", true);
+        _current.SetVector3("colour", Vector3.One);
+        _current.SetMatrix4("model", Matrix4.Identity);
+        groundMesh.DrawMesh();
+
+        _current.SetVector3("lightDir", new Vector3(-0.3f, -1.0f, -0.5f));
+        _current.SetVector3("viewPos", camera.GetPosition());
 
         skybox.DrawSkyBox(view, projection);
 
@@ -200,38 +215,14 @@ public class MainWindow : GameWindow
             camera.UpdateDirection(MouseState.Delta.X, MouseState.Delta.Y);   
         }
 
-        if (KeyboardState.IsKeyDown(Keys.R)) rvController.RotateWheels((float)deltaTime);
-        if (KeyboardState.IsKeyDown(Keys.Left)) rvController.SteerWheels(Keys.Left, (float)deltaTime);
-        if (KeyboardState.IsKeyDown(Keys.Right)) rvController.SteerWheels(Keys.Right, (float)deltaTime);
-
         camera.UpdateVectors(forwardInput, rightInput, upInput, deltaTime);
         camera.UpdateMoveSpeed(KeyboardState.IsKeyDown(Keys.LeftShift));
 
+        // RV controller
+        rvController.UpdateInput(KeyboardState, (float)deltaTime);
+
         // view
         view = camera.UpdateViewMatrix();
-
-        // // scale calc
-        // double scaleCalc = scaleBase + scalePulse * MathHelper.Sin(time.TotalTime() * scaleSpeed);
-
-        // // rotation calcs
-        // double angleX = amplitudeX * MathHelper.Sin(time.TotalTime() * amplitudeSpeedX);
-        // double angleZ = amplitudeZ * MathHelper.Sin(time.TotalTime() * amplitudeSpeedZ);
-
-        // //translation calc
-        // double translationCalc = translationAmt * MathHelper.Sin(time.TotalTime() * translationSpeed);
-
-        // // scale
-        // scale = Matrix4.CreateScale((float)scaleCalc);
-
-        // // rotation
-        // rotationAngle += (float)(rotationSpeed * time.DeltaTime());
-
-        // rotation = Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(angleX)) *
-        //            Matrix4.CreateRotationZ((float)MathHelper.DegreesToRadians(angleZ)) *
-        //            Matrix4.CreateRotationY(MathHelper.DegreesToRadians(rotationAngle));
-
-        // // translation
-        // translation = Matrix4.CreateTranslation(0f, (float)translationCalc, 0f);
     }
 
     /*
@@ -249,6 +240,12 @@ public class MainWindow : GameWindow
 
     /*
         Runs when the window closes. Frees everything created on the GPU.
+
+        - shaders
+        - all meshes (root currently needs to be set to scene node)
+        - ground mesh (seperate atm)
+        - textures
+        - skybox
     */
     protected override void OnUnload()
     {
@@ -261,7 +258,10 @@ public class MainWindow : GameWindow
             texture.Cleanup();
         }
 
-        root.Cleanup();
+        sceneRoot.Cleanup();
+
+        groundMesh.Cleanup();
+        groundTexture.Cleanup();
 
         skybox.Cleanup();
     }

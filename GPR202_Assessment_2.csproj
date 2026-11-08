@@ -13,10 +13,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="shaders\**" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="textures\**" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="models\**" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="Skybox\**" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Engine\Shaders\**" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Assets\Textures\**" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Assets\Models\**" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Assets\Skybox\**" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

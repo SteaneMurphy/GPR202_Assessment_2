@@ -1,4 +1,4 @@
-# GPR202 Assessment 1
+# GPR202 Assessment 2
 
 An OpenTK project that draws an animated torus using the modern OpenGL pipeline.
 
@@ -6,7 +6,7 @@ The torus is generated in code (Torus.cs) rather than typed in by hand. Each ver
 
 ## Running it
 
-Run `GPR202_Assessment_1.exe` from the build folder. The `shaders` and `textures` folders need to stay next to the exe.
+Run `GPR202_Assessment_2.exe` from the build folder. The `Engine/Shaders` and `Assets` folders need to stay next to the exe.
 
 To build from source you need the .NET 8 SDK. Run `dotnet run` from the project folder.
 
@@ -44,8 +44,12 @@ With the texture on (T), there's a visible seam on the torus where the UVs wrap 
 
 ## References
 
-AITextured. (2025, December 10). *Water PBR texture with shimmering blue and reflective gold liquid surface* [Image]. https://aitextured.com/textures/water/water-seamless-pbr-shimmering-liquid-metal-water-texture.html
+VectorMan. (2020, July 26). Breaking Bad 1986 Fleetwood Bounder RV [3D model]. Sketchfab. https://sketchfab.com/3d-models/breaking-bad-1986-fleetwood-bounder-rv-28006272fe514cb68e3a0ac2125734aa
+
+Wisniowski, M. (2018). HDRI to CubeMap [Computer software]. https://matheowis.github.io/HDRI-to-CubeMap/
 
 OpenTK. (2025). *OpenTK* (Version 4.9.4) [Computer software]. https://opentk.net/
 
 StbSharp. (2026). *StbImageSharp* (Version 2.30.16) [Computer software]. https://github.com/StbSharp/StbImageSharp
+
+Seervi, R. (2023, October 26). Red sand [Texture]. Poly Haven. https://polyhaven.com/a/red_sand

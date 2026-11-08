@@ -21,13 +21,15 @@ uniform mat4 projection;
 
 out vec3 vNorm;                                 // normal vertices out to frag
 out vec2 vUV;                                   // UV vertices out to frag
+out vec3 vWorldPos;                             // where this pixel is on the mesh in world space
 
 void main()
 {
     vec4 worldPos = vec4(aPos, 1.0) * model;    // creates the world space vector from the model matrix -> world space (split for lighting later)
     gl_Position = worldPos * view * projection; // multiplies each vertice by view and projection matrix -> clip space
-    vNorm = aNorm;                              // assigns the colours out
+    vNorm = aNorm * mat3(model);                // assigns the colours out (rotates the normals with the verts rotation values so they stay 90deg)
     vUV = aUV;                                  // assigns the UVs out
+    vWorldPos = worldPos.xyz;
 }
 
 /*
