@@ -25,7 +25,7 @@ public class Texture
         Reads the image file and decodes it into raw RGBA pixel data using StbImageSharp.
         The image is flipped because OpenGL expects the first row to be the bottom.
     */
-    public void LoadImage()
+    private void LoadImage()
     {
         if(!File.Exists(path))
         {
@@ -50,9 +50,9 @@ public class Texture
         repeat so UVs above 1 tile the image, and mipmaps are generated so the texture
         stays smooth at a distance.
     */
-    public void CreateTexture()
+    private void CreateTexture()
     {
-        if(image == null)                                                                       // nothing to upload, torus draws untextured
+        if(image == null)                                                                       // nothing to upload if the image failed to load
         {
             return;
         }

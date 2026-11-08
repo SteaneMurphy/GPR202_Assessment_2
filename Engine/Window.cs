@@ -8,10 +8,11 @@ namespace OpenGLWindow;
 
 /*
     The main window. Inherits from OpenTK's GameWindow, which runs the loop:
-    OnUpdateFrame handles input and animation, OnRenderFrame draws the frame.
+    OnUpdateFrame handles input and movement, OnRenderFrame draws the frame.
 
-    Controls: left mouse drag to orbit, scroll to zoom,
-    D depth test, W wireframe, F face culling, R ripple shader, T texture.
+    Camera: mouse to look, WASD to move, Q/E down/up, Left Shift to move faster.
+    RV: Up/Down to drive, Left/Right to steer, R to spin the wheels.
+    Escape closes the window.
 */
 public class MainWindow : GameWindow
 {
@@ -80,13 +81,13 @@ public class MainWindow : GameWindow
     }
 
     /*
-        Runs once when the window opens. Sets the animation values, creates the
-        camera, texture, both shader programs and the object mesh.
+        Runs once when the window opens. Loads every model into the scene tree,
+        then creates the textures, skybox, ground, camera and shader.
     */
     protected override void OnLoad()
     {
         base.OnLoad();
-        // CursorState = CursorState.Grabbed;
+        CursorState = CursorState.Grabbed;
         GL.Enable(EnableCap.DepthTest);
 
         // meshes
@@ -96,8 +97,8 @@ public class MainWindow : GameWindow
         rvController = new RVController();
 
         /*
-            Loads and converts the obj file data into material data (vertices, indices, faces, material references).
-            Treats each material as a seperate object to render and builds seperate meshes.
+            Loads each .obj file in Assets/Models into material data (vertices, indices, material references).
+            Each material becomes its own node under that model's root, and each root is added to the scene root.
         */
         sceneRoot = new ObjectNode("sceneRoot");
 
@@ -139,17 +140,15 @@ public class MainWindow : GameWindow
         Vector4 screenColour = new Vector4(.1f, .1f, .1f, 1f);
         GL.ClearColor(screenColour.X, screenColour.Y, screenColour.Z, screenColour.W);
 
-        /*
-            Builds all shaders and sets the _standard as default
-        */
+        // builds the shader and sets it as the active one
         _standard = new ShaderPipeline(vertShaderPath, fragShaderPath);
         _standard.BuildShaders();
         _current = _standard;
     }
 
     /*
-        Draws one frame. Applies the toggled GL states, clears the screen, picks the
-        active shader, sends the uniforms, binds the texture and draws the object.
+        Draws one frame. Clears the screen, sends the camera matrices, then draws
+        the scene tree, the ground and finally the skybox.
     */
     protected override void OnRenderFrame(FrameEventArgs args)
     {
@@ -157,12 +156,7 @@ public class MainWindow : GameWindow
 
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-        _current.UseShader();                                            // uniforms below go to whichever program is active
-
-        // scale, then rotate, then translate. Rotation before translation or else the translated movement also gets rotated
-        // Matrix4 model = scale * rotation * translation;
-        // Matrix4 model = Matrix4.Identity;
-        // Matrix4 mvp = model * view * projection;
+        _current.UseShader();                                            // uniforms below go to whichever shader is active
 
         _current.SetMatrix4("view", view);
         _current.SetMatrix4("projection", projection);
@@ -183,12 +177,13 @@ public class MainWindow : GameWindow
     }
 
     /*
-        Runs every frame before drawing. Reads mouse and keyboard input, updates the
-        camera, and builds the scale, rotation and translation matrices from time.
+        Runs every frame before drawing. Reads mouse and keyboard input, moves the
+        camera and the RV, then rebuilds the view matrix.
     */
     protected override void OnUpdateFrame(FrameEventArgs args)
     {
         base.OnUpdateFrame(args);
+
         // deltaTime
         double deltaTime = time.DeltaTime();
 
@@ -241,10 +236,10 @@ public class MainWindow : GameWindow
     /*
         Runs when the window closes. Frees everything created on the GPU.
 
-        - shaders
-        - all meshes (root currently needs to be set to scene node)
-        - ground mesh (seperate atm)
+        - shader
         - textures
+        - all scene meshes (through the scene root)
+        - ground mesh and texture
         - skybox
     */
     protected override void OnUnload()
@@ -276,27 +271,18 @@ public class MainWindow : GameWindow
     de Vries, J. (n.d.-b). Depth testing. LearnOpenGL.
         https://learnopengl.com/Advanced-OpenGL/Depth-testing
 
-    de Vries, J. (n.d.-c). Face culling. LearnOpenGL.
-        https://learnopengl.com/Advanced-OpenGL/Face-culling
-
-    de Vries, J. (n.d.-d). Transformations. LearnOpenGL.
-        https://learnopengl.com/Getting-started/Transformations
-
     Khronos Group. (n.d.-a). glClear [OpenGL 4 reference page].
         https://registry.khronos.org/OpenGL-Refpages/gl4/html/glClear.xhtml
 
     Khronos Group. (n.d.-b). glClearColor [OpenGL 4 reference page].
         https://registry.khronos.org/OpenGL-Refpages/gl4/html/glClearColor.xhtml
 
-    Khronos Group. (n.d.-c). glCullFace [OpenGL 4 reference page].
-        https://registry.khronos.org/OpenGL-Refpages/gl4/html/glCullFace.xhtml
-
-    Khronos Group. (n.d.-d). glEnable [OpenGL 4 reference page].
+    Khronos Group. (n.d.-c). glEnable [OpenGL 4 reference page].
         https://registry.khronos.org/OpenGL-Refpages/gl4/html/glEnable.xhtml
 
-    Khronos Group. (n.d.-e). glPolygonMode [OpenGL 4 reference page].
-        https://registry.khronos.org/OpenGL-Refpages/gl4/html/glPolygonMode.xhtml
-
-    Khronos Group. (n.d.-f). glViewport [OpenGL 4 reference page].
+    Khronos Group. (n.d.-d). glViewport [OpenGL 4 reference page].
         https://registry.khronos.org/OpenGL-Refpages/gl4/html/glViewport.xhtml
+
+    OpenTK. (n.d.). Creating a window. OpenTK.
+        https://opentk.net/learn/chapter1/1-creating-a-window.html
 */

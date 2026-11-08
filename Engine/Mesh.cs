@@ -2,14 +2,14 @@ using OpenTK.Graphics.OpenGL4;
 
 /*
     This class takes vertex and index data, uploads it to the GPU and draws it.
-    Each vertex is 8 floats: position (3), colour (3) and UV (2).
+    Each vertex is 8 floats: position (3), normal (3) and UV (2).
 */
 public class Mesh
 {
     private float[] vertexData;
     private uint[] indexArray;
-    private int _vao;                       // vertex buffer object
-    private int _vbo;                       // vertex array object
+    private int _vao;                       // vertex array object
+    private int _vbo;                       // vertex buffer object
     private int _ebo;                       // element buffer object
     int stride;
 
@@ -25,7 +25,8 @@ public class Mesh
     }
 
     /*
-        Sets up the GPU buffers for this mesh. Called once in OnLoad.
+        Sets up the GPU buffers for this mesh. Called once per mesh at load
+        (by ObjectNode.BuildMeshes for models, and in OnLoad for the ground).
     */
     public void BuildMesh()
     {
@@ -53,7 +54,7 @@ public class Mesh
         GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, stride, 3 * sizeof(float));      // normal: 3 floats after the position
         GL.EnableVertexAttribArray(1);
 
-        GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, stride, 6 * sizeof(float));      // UV: 2 floats after the colour
+        GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, stride, 6 * sizeof(float));      // UV: 2 floats after the normal
         GL.EnableVertexAttribArray(2);
 
         _ebo = GL.GenBuffer();

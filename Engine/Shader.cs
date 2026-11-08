@@ -5,7 +5,8 @@ using OpenTK.Mathematics;
     This class prepares the shader scripts into one shader instance to be used by the
     OpenGL program.
 
-    It combines one vertex shader and one fragment shader, passed in from the main window.
+    It combines one vertex shader and one fragment shader, passed in from the main window
+    (standard shader) or the Skybox class (skybox shader).
     It compiles the shaders and creates and links the shader program.
 */
 public class ShaderPipeline
@@ -125,12 +126,14 @@ public class ShaderPipeline
         
     }
 
+    // Sends a vec3 uniform (e.g. colour, lightDir, viewPos) to the shader program.
     public void SetVector3(string name, Vector3 vector)
     {
         int location = GL.GetUniformLocation(shaderInstance, name);
         GL.Uniform3(location, vector);
     }
 
+    // Sends a bool uniform (e.g. useTexture). GLSL bools are set as ints, so true = 1, false = 0.
     public void SetBool(string name, bool value)
     {
         int location = GL.GetUniformLocation(shaderInstance, name);
@@ -138,7 +141,7 @@ public class ShaderPipeline
     }
 
     /*
-        Sends a 4x4 matrix uniform (e.g. mvp) to the shader program.
+        Sends a 4x4 matrix uniform (e.g. model, view, projection) to the shader program.
     */
     public void SetMatrix4(string name, Matrix4 matrix)
     {

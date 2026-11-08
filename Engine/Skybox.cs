@@ -1,7 +1,12 @@
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 
-
+/*
+    Draws a cube around the camera with the cubemap on its inside, so the sky
+    surrounds the scene. It has its own shader, and its own buffers because it
+    only needs positions: each vertex's position doubles as the direction to
+    sample the cubemap in.
+*/
 public class Skybox
 {
     CubemapTexture cubemap;
@@ -32,6 +37,10 @@ public class Skybox
         3, 2, 6,  6, 7, 3,  // top
     };
 
+    /*
+        Loads the 6 cubemap faces, builds the skybox shader, and uploads the
+        cube's 8 corners and 36 indices to the GPU.
+    */
     public Skybox(string[] paths, string vertShaderPath, string fragShaderPath)
     {
         cubemap = new CubemapTexture(paths);
@@ -55,6 +64,12 @@ public class Skybox
         GL.BindVertexArray(0);
     }
 
+    /*
+        Drawn last, after the scene. The vertex shader sets the depth to 1.0 (the far plane)
+        with pos.xyww, and the depth test is changed to Lequal so the sky only shows where
+        nothing else has been drawn. The view matrix has its translation removed so the
+        sky stays centred on the camera and never gets closer.
+    */
     public void DrawSkyBox(Matrix4 view, Matrix4 projection)
     {
         GL.DepthFunc(DepthFunction.Lequal);
@@ -72,6 +87,7 @@ public class Skybox
         GL.DepthFunc(DepthFunction.Less);                                                  // back to default
     }
 
+    // Frees the cube's buffers, the skybox shader and the cubemap. Called when the window closes.
     public void Cleanup()
     {
         GL.DeleteVertexArray(_vao);
@@ -83,7 +99,17 @@ public class Skybox
 }
 
 /*
+    References
 
-    Wisniowski, M. (2018). HDRI to CubeMap [Computer software]. https://matheowis.github.io/HDRI-to-CubeMap/
+    de Vries, J. (n.d.). Cubemaps. LearnOpenGL.
+        https://learnopengl.com/Advanced-OpenGL/Cubemaps
 
+    Khronos Group. (n.d.). glDepthFunc [OpenGL 4 reference page].
+        https://registry.khronos.org/OpenGL-Refpages/gl4/html/glDepthFunc.xhtml
+
+    Rosebud AI. (2026). Rosebud AI [AI image generator]. Used to generate the desert skybox image.
+        https://rosebud.ai
+
+    Wisniowski, M. (2018). HDRI to CubeMap [Computer software].
+        https://matheowis.github.io/HDRI-to-CubeMap/
 */

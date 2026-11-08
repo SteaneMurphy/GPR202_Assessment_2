@@ -1,6 +1,10 @@
 using OpenTK.Mathematics;
 using System.Globalization;
 
+/*
+    One part of a model (one "o" object in the .obj), with its own vertex data and material.
+    Each part becomes its own ObjectNode, so it can be moved and drawn separately.
+*/
 public class MaterialPart
 {
     public string name = "";
@@ -12,10 +16,24 @@ public class MaterialPart
 }
 
 /*
-    Really bad logic here. If obj file lists split identifiers out of order, no materialpart obj exists to write into. Rewrite with defence in mind.
+    Loads a Wavefront .obj file and its .mtl material file into MaterialParts.
+
+    Limitations: expects the file to be in the order Blender exports it, with mtllib first
+    and each "o" line before its usemtl and faces. Faces must be triangles with
+    position/uv/normal on every corner. Files in another order won't load.
+
+    AI help with understanding the .obj and .mtl file structure to plan the parser
 */
 public class ObjectLoader
 {
+    /*
+        Reads the .obj line by line. Positions, normals and UVs are stored in shared lists,
+        then each face corner looks them up and adds one full 8-float vertex
+        (position, normal, UV) to the current part. Every corner gets its own vertex,
+        so the indices just count up.
+
+        Once loaded, the model is moved so it is centred on X/Z and sits on y = 0.
+    */
     public static MaterialPart[] ParseObjectData(string path)
     {
         List<Vector3> positions = new List<Vector3>();
@@ -26,7 +44,7 @@ public class ObjectLoader
         Dictionary<string, MaterialPart> materialData = new Dictionary<string, MaterialPart>();                              // filled from the .mtl when the mtllib line is read
         string folder = Path.GetDirectoryName(path)!;                                                                         // mtl and texture names are relative to the obj's folder
 
-        MaterialPart currentMaterial = null!;                                                                                // empty container for material, updated per obj foundw
+        MaterialPart currentMaterial = null!;                                                                                // the part being filled, replaced at each "o" line
 
         foreach (string line in File.ReadLines(path))
         {
@@ -51,8 +69,8 @@ public class ObjectLoader
                         Vector2 t = uvs[int.Parse(corner[1]) - 1];
                         Vector3 n = normals[int.Parse(corner[2]) - 1];
 
-                        currentMaterial.vertices.AddRange([p.X, p.Y, p.Z, n.X, n.Y, n.Z, t.X, t.Y]);                                            // creates new vertice (8-float)
-                        currentMaterial.indices.Add((uint)currentMaterial.indices.Count);                                                       // creates new index for the vertice    
+                        currentMaterial.vertices.AddRange([p.X, p.Y, p.Z, n.X, n.Y, n.Z, t.X, t.Y]);                                            // adds one vertex (8 floats)
+                        currentMaterial.indices.Add((uint)currentMaterial.indices.Count);                                                       // index for that vertex
                     }
                     break;
                 case "o":                                                                                                       // object (ie; tyre, axle, door, rim, etc)
@@ -74,8 +92,8 @@ public class ObjectLoader
             }
         }
 
-        Vector3 offset = CalculateObjectBounds(positions);
-        
+        Vector3 offset = CalculateObjectBounds(positions);                                                                    // move the whole model to the origin
+
         foreach(MaterialPart material in materials)
         {
             for(int i = 0; i < material.vertices.Count; i += 8)
@@ -89,7 +107,11 @@ public class ObjectLoader
         return materials.ToArray();
     }
 
-    public static Dictionary<string, MaterialPart> ParseMaterial(string path)
+    /*
+        Reads the .mtl file into a lookup of material name -> colour (Kd) and texture path (map_Kd).
+        usemtl lines in the .obj then copy from this lookup.
+    */
+    private static Dictionary<string, MaterialPart> ParseMaterial(string path)
     {
         MaterialPart currentMaterial = null!;
         Dictionary<string, MaterialPart> materialData = new Dictionary<string, MaterialPart>();
@@ -117,6 +139,7 @@ public class ObjectLoader
         return materialData;
     }
 
+    // Parses with InvariantCulture so "1.5" reads the same on systems that use a comma for decimals.
     private static float ParseFloat(string input)
     {
         if (float.TryParse(input, NumberStyles.Float, CultureInfo.InvariantCulture, out float result))
@@ -130,6 +153,10 @@ public class ObjectLoader
         }
     }
 
+    /*
+        Finds the model's bounding box and returns the offset that puts it at the origin:
+        centre on X and Z, bottom on Y, so the model sits on the ground.
+    */
     private static Vector3 CalculateObjectBounds(List<Vector3> positions)
     {
         Vector3 minValues = positions[0];
@@ -154,3 +181,21 @@ public class ObjectLoader
         return offset;
     }
 }
+
+/*
+    References (Claude used to determine OBJ and MTL file structure)
+
+    Anthropic. (2026). Claude [Large language model]. https://claude.ai
+
+    Microsoft. (n.d.-a). CultureInfo.InvariantCulture property [API reference]. Microsoft Learn.
+        https://learn.microsoft.com/en-us/dotnet/api/system.globalization.cultureinfo.invariantculture
+
+    Microsoft. (n.d.-b). Single.TryParse method [API reference]. Microsoft Learn.
+        https://learn.microsoft.com/en-us/dotnet/api/system.single.tryparse
+
+    Ramey, D., Rose, L., & Tyerman, L. (1995). MTL material format (Lightwave, OBJ). Paul Bourke.
+        https://paulbourke.net/dataformats/mtl/
+
+    Wavefront Technologies. (n.d.). Object files (.obj). Paul Bourke.
+        https://paulbourke.net/dataformats/obj/
+*/

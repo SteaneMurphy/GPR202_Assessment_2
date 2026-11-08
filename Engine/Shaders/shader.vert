@@ -1,13 +1,13 @@
 #version 330 core
 
 /*
-    This shader takes in a 8-float vertex whereby the values are
-    split into vertex position, colour and UV coordinates.
+    This shader takes in an 8-float vertex: position, normal and UV.
 
-    It provides a matrix calculation on the position vertices using the
-    pre-calculated "mvp" and outputs the colour/UVs to the frag shader.
+    It moves the position into world space with the model matrix, then into
+    clip space with view and projection (gl_Position). The world position,
+    rotated normal and UV are passed to the frag shader for lighting and texturing.
 
-    gl_Position results in clip space.
+    OpenTK matrices are row-major, so the vector goes on the left: v * model * view * projection.
 */
 
 layout (location = 0) in vec3 aPos;             // vertices position (vector3)
@@ -17,7 +17,6 @@ layout (location = 2) in vec2 aUV;              // vertices UV (vector2)
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
-// uniform mat4 mvp;                               // mvp = model * view * projection (matrix4)
 
 out vec3 vNorm;                                 // normal vertices out to frag
 out vec2 vUV;                                   // UV vertices out to frag
@@ -25,9 +24,9 @@ out vec3 vWorldPos;                             // where this pixel is on the me
 
 void main()
 {
-    vec4 worldPos = vec4(aPos, 1.0) * model;    // creates the world space vector from the model matrix -> world space (split for lighting later)
-    gl_Position = worldPos * view * projection; // multiplies each vertice by view and projection matrix -> clip space
-    vNorm = aNorm * mat3(model);                // assigns the colours out (rotates the normals with the verts rotation values so they stay 90deg)
+    vec4 worldPos = vec4(aPos, 1.0) * model;    // model -> world space (kept separate for lighting)
+    gl_Position = worldPos * view * projection; // world -> clip space
+    vNorm = aNorm * mat3(model);                // rotate the normal with the model (mat3 drops translation; fine while scale is uniform)
     vUV = aUV;                                  // assigns the UVs out
     vWorldPos = worldPos.xyz;
 }
@@ -35,10 +34,13 @@ void main()
 /*
     References
 
-    de Vries, J. (n.d.-a). Coordinate systems. LearnOpenGL.
+    de Vries, J. (n.d.-a). Basic lighting. LearnOpenGL.
+        https://learnopengl.com/Lighting/Basic-Lighting
+
+    de Vries, J. (n.d.-b). Coordinate systems. LearnOpenGL.
         https://learnopengl.com/Getting-started/Coordinate-Systems
 
-    de Vries, J. (n.d.-b). Shaders. LearnOpenGL.
+    de Vries, J. (n.d.-c). Shaders. LearnOpenGL.
         https://learnopengl.com/Getting-started/Shaders
 
     Khronos Group. (n.d.). gl_Position [OpenGL 4 reference page].
